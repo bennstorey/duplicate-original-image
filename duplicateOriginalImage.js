@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 003 DuplicateOriginalImage plugin: starting");
+  console.log("✅ 004 DuplicateOriginalImage plugin: starting");
 
   function waitForContentStationSdk(callback) {
     if (typeof ContentStationSdk !== "undefined") {
@@ -18,7 +18,9 @@
       tooltip: "Duplicate the original version of the selected image",
       icon: "content_copy",
       onClick: async (context) => {
+        console.log("🟡 Duplicate button clicked");
         try {
+
           const selection = await ContentStationSdk.getCurrentSelection();
           const selected = selection?.[0];
 
