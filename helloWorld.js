@@ -1,8 +1,11 @@
 (function () {
-  window.studioPlugin = {
+  'use strict';
+
+  window.plugin = {
     initialize: function () {
-      console.log("🎉 Hello from plugin");
-      alert("Hello from plugin");
+      console.log('✅ Plugin loaded');
+      alert('✅ Hello from plugin!');
     }
   };
 })();
+
