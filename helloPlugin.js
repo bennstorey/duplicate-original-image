@@ -1,8 +1,6 @@
-(function () {
-  window.plugin = {
-    initialize: function () {
-      alert("✅ Plugin initialized");
-      console.log("✅ Plugin initialized");
-    }
-  };
-})();
+window.plugin = {
+  initialize: function () {
+    console.log("✅ HelloPlugin: initialize() called");
+    alert("✅ HelloPlugin has loaded and is active.");
+  }
+};
