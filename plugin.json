@@ -1,0 +1,9 @@
+{
+    "id": "duplicate-original-image",
+    "name": "Duplicate Original Image",
+    "description": "Creates a new asset from the original version of a selected image.",
+    "version": "1.0.0",
+    "entry": "index.html",
+    "permissions": ["objects.read", "objects.write", "objects.download", "objects.upload"]
+  }
+  
