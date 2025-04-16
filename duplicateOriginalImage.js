@@ -1,6 +1,6 @@
 (function () {
   if (typeof ContentStationSdk !== "undefined") {
-    console.log("✅ DuplicateOriginalImage plugin: ContentStationSdk is available");
+    console.log("✅ 001 DuplicateOriginalImage plugin: ContentStationSdk is available");
 
     ContentStationSdk.addContextMenuItem({
       id: "duplicate-original-image",
