@@ -1,4 +1,4 @@
-window.studioPlugin = {
+window.plugin = {
   initialize: function (api) {
     console.log('✅ Duplicate Original Image plugin initializing...');
     initPlugin(api); // Run async logic inside here
