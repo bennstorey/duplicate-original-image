@@ -1,4 +1,3 @@
-
 (function () {
   console.log("✅ 002 DuplicateOriginalImage plugin: starting");
 
@@ -33,7 +32,7 @@
           const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
           const fetchJson = async (endpoint, body) => {
-            const res = await fetch(\`\${serverUrl}/webservices/StudioServer.svc/\${endpoint}\`, {
+            const res = await fetch(`${serverUrl}/webservices/StudioServer.svc/${endpoint}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ Ticket: ticket, ...body })
@@ -42,7 +41,7 @@
           };
 
           const fetchBinary = async (endpoint, body) => {
-            const res = await fetch(\`\${serverUrl}/webservices/StudioServer.svc/\${endpoint}\`, {
+            const res = await fetch(`${serverUrl}/webservices/StudioServer.svc/${endpoint}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ Ticket: ticket, ...body })
@@ -62,7 +61,7 @@
           form.append("Ticket", ticket);
           form.append("File", file);
 
-          const uploadRes = await fetch(\`\${serverUrl}/webservices/StudioServer.svc/UploadFile\`, {
+          const uploadRes = await fetch(`${serverUrl}/webservices/StudioServer.svc/UploadFile`, {
             method: "POST",
             body: form
           });
