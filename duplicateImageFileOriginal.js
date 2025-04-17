@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A41 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A42 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -36,7 +36,11 @@
           }
 
           const objectId = selected.id;
-          const ticket = await ContentStationSdk.getTicket();
+
+          // Use the correct documented method to retrieve the ticket
+          const session = await ContentStationSdk.session.get();
+          const ticket = session.ticket;
+
           const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
           const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
