@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A30 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A32 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -18,7 +18,7 @@
       label: "Duplicate Original Image",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
-      onClick: async function (config, selection, dossier) {
+      onAction: async function (config, selection, dossier) {
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         try {
