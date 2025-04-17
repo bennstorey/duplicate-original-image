@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A24 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A25 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -8,6 +8,15 @@
     } else {
       console.log("⏳ Waiting for ContentStationSdk...");
       setTimeout(() => waitForContentStationSdk(callback), 300);
+    }
+  }
+
+  function waitForToolbarScope(callback) {
+    const toolbar = document.querySelector("ww-dossier-toolbar");
+    if (toolbar && angular.element(toolbar).scope()?.$ctrl?.loadButtons) {
+      callback(angular.element(toolbar).scope());
+    } else {
+      setTimeout(() => waitForToolbarScope(callback), 300);
     }
   }
 
@@ -95,16 +104,10 @@
     });
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
-    // Force button refresh
-setTimeout(() => {
-  const scope = angular.element(document.querySelector("ww-dossier-toolbar")).scope();
-  if (scope && scope.$ctrl && typeof scope.$ctrl.loadButtons === "function") {
-    console.log("♻️ Forcing SDK button refresh");
-    scope.$ctrl.loadButtons();
-  } else {
-    console.warn("⚠️ Failed to force refresh — dossier toolbar controller not ready.");
-  }
-}, 500);
 
+    waitForToolbarScope(scope => {
+      console.log("♻️ Forcing SDK button refresh");
+      scope.$ctrl.loadButtons();
+    });
   });
 })();
