@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A01 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A02 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -19,37 +19,11 @@
       label: "Duplicate Original Image",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
-      onClick: async () => {
+      onClick: () => {
         console.log("🟡 Duplicate button clicked — initiating handler");
+        alert("Test: Button was clicked");
+      }
 
-        let selection;
-        try {
-          selection = await ContentStationSdk.getCurrentSelection();
-        } catch (e) {
-          console.warn("⚠️ Could not get selection:", e);
-        }
-
-        console.log("📦 Selection:", selection);
-        const selected = selection?.[0];
-
-        if (!selected || selected.objectType !== "Image") {
-          alert("Please select a single image to duplicate.");
-          return;
-        }
-
-        try {
-          const objectId = selected.id;
-          const ticket = await ContentStationSdk.getSessionTicket();
-          const serverUrl = await ContentStationSdk.getStudioServerUrl();
-
-          const fetchJson = async (endpoint, body) => {
-            const res = await fetch(`${serverUrl}/webservices/StudioServer.svc/${endpoint}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ Ticket: ticket, ...body })
-            });
-            return res.json();
-          };
 
           const fetchBinary = async (endpoint, body) => {
             const res = await fetch(`${serverUrl}/webservices/StudioServer.svc/${endpoint}`, {
