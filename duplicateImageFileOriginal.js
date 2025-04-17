@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A09 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A10 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -23,16 +23,10 @@
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
 
-    // Workaround for missing direct click binding
-    window.addEventListener("click", async () => {
-      console.log("🧪 Global window click detected");
+    // MutationObserver to attach click handler after button appears
+    const observer = new MutationObserver(() => {
       const button = document.querySelector('[data-action="duplicate-original-image"]');
-      if (!button) {
-        console.warn("❌ Could not find button in DOM for workaround handler");
-        return;
-      }
-
-      if (!button._duplicateHandlerAttached) {
+      if (button && !button._duplicateHandlerAttached) {
         button.addEventListener("click", async () => {
           console.log("🟡 Duplicate button clicked — initiating handler");
 
@@ -107,7 +101,11 @@
           }
         });
         button._duplicateHandlerAttached = true;
+        console.log("✅ Duplicate button handler attached via MutationObserver");
+        observer.disconnect();
       }
     });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();
