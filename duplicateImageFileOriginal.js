@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A17 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A18 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -24,14 +24,15 @@
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
 
     let retries = 0;
-    const maxRetries = 10;
+    const maxRetries = 30;
 
     function attachHandler() {
       const button = document.querySelector('[data-action-id="duplicate-original-image"]');
       if (!button) {
+        console.log(`⏳ Waiting for button in DOM (retry ${retries + 1}/${maxRetries})...`);
         if (retries < maxRetries) {
           retries++;
-          setTimeout(attachHandler, 300);
+          setTimeout(attachHandler, 500);
         } else {
           console.warn("❌ Could not find button in DOM after retrying");
         }
@@ -117,6 +118,6 @@
       });
     }
 
-    setTimeout(attachHandler, 300);
+    setTimeout(attachHandler, 500);
   });
 })();
