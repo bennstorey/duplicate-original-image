@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 004 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ 005 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
