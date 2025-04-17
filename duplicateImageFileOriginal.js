@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A15 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A16 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -23,19 +23,12 @@
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
 
-    // Workaround click handler like in Drag to InDesign
-    window.addEventListener("click", async () => {
-      console.log("🧪 Global window click detected");
+    const observer = new MutationObserver(() => {
       const button = document.querySelector('[data-action-id="duplicate-original-image"]');
-      if (!button) {
-        console.warn("❌ Could not find button in DOM for workaround handler");
-        return;
-      }
+      if (!button || button.dataset.handlerAttached) return;
 
-      // Ensure no double handler
-      if (button.dataset.handlerAttached) return;
+      console.log("🟡 Duplicate button found — attaching handler");
       button.dataset.handlerAttached = "true";
-
       button.addEventListener("click", async (e) => {
         e.stopPropagation();
         console.log("🟡 Duplicate button clicked — initiating handler");
@@ -111,5 +104,7 @@
         }
       });
     });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();
