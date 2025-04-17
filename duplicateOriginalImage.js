@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 005 DuplicateOriginalImage plugin: starting");
+  console.log("✅ 006 DuplicateOriginalImage plugin: starting");
 
   function waitForContentStationSdk(callback) {
     if (typeof ContentStationSdk !== "undefined") {
