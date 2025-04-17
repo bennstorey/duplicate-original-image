@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A33 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A34 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -30,7 +30,7 @@
           }
 
           const selected = selection[0];
-          if (selected.objectType !== "Image") {
+          if (selected.Type !== "Image") {
             alert("The selected item is not an image.");
             return;
           }
