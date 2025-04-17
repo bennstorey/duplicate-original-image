@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A16 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A17 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -23,10 +23,22 @@
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
 
-    const observer = new MutationObserver(() => {
-      const button = document.querySelector('[data-action-id="duplicate-original-image"]');
-      if (!button || button.dataset.handlerAttached) return;
+    let retries = 0;
+    const maxRetries = 10;
 
+    function attachHandler() {
+      const button = document.querySelector('[data-action-id="duplicate-original-image"]');
+      if (!button) {
+        if (retries < maxRetries) {
+          retries++;
+          setTimeout(attachHandler, 300);
+        } else {
+          console.warn("❌ Could not find button in DOM after retrying");
+        }
+        return;
+      }
+
+      if (button.dataset.handlerAttached) return;
       console.log("🟡 Duplicate button found — attaching handler");
       button.dataset.handlerAttached = "true";
       button.addEventListener("click", async (e) => {
@@ -103,8 +115,8 @@
           alert("❌ Failed to duplicate image. See console for details.");
         }
       });
-    });
+    }
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(attachHandler, 300);
   });
 })();
