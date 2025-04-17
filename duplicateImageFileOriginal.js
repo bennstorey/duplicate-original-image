@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A42 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A43 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -37,9 +37,9 @@
 
           const objectId = selected.id;
 
-          // Use the correct documented method to retrieve the ticket
-          const session = await ContentStationSdk.session.get();
-          const ticket = session.ticket;
+          // Use the correct documented method to retrieve the ticket from context
+          const context = await ContentStationSdk.getPluginContext();
+          const ticket = context.session.Ticket;
 
           const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
