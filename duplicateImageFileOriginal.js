@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A35 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A36 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -30,13 +30,13 @@
           }
 
           const selected = selection[0];
-          if (selected.Type !== "Image") {
+          if (selected.objectType !== "Image") {
             alert("The selected item is not an image.");
             return;
           }
 
           const objectId = selected.id;
-          const { Ticket: ticket } = await ContentStationSdk.getCurrentSession();
+          const ticket = await ContentStationSdk.getSessionTicket();
           const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
           const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
