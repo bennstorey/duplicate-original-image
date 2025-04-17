@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A05 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A06 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   window.addEventListener("click", function () {
     console.log("🧪 Global window click detected");
