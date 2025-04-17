@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A45 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A46 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -38,8 +38,9 @@
           const objectId = selected.id;
 
           // Pull values from plugin context properly
-          const ticket = context.context.session.Ticket;
-          const serverUrl = context.context.studioServerUrl;
+          const ticket = context.session.Ticket;
+          const serverUrl = context.studioServerUrl;
+
 
           const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
             method: "POST",
