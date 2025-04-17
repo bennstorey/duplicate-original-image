@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A26 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A27 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -23,7 +23,8 @@
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         try {
-          const selection = await ContentStationSdk.getCurrentSelection();
+          const selection = await ContentStationSdk.getSelection();
+
           console.log("📦 Selection:", selection);
 
           const selected = selection && selection[0];
