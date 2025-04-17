@@ -1,18 +1,19 @@
 (function () {
-  console.log("✅ A27 Plugin: Duplicate Original Image - Dossier Toolbar");
+  const logPrefix = "🔁 [DuplicateImagePlugin]";
+  console.log(`${logPrefix} ✅ Initialized`);
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
-      console.log("✅ ContentStationSdk is available");
+      console.log(`${logPrefix} ✅ ContentStationSdk available`);
       callback();
     } else {
-      console.log("⏳ Waiting for ContentStationSdk...");
+      console.log(`${logPrefix} ⏳ Waiting for ContentStationSdk...`);
       setTimeout(() => waitForContentStationSdk(callback), 300);
     }
   }
 
   waitForContentStationSdk(function () {
-    console.log("⏳ Registering dossier toolbar button...");
+    console.log(`${logPrefix} ⏳ Registering dossier toolbar button...`);
 
     ContentStationSdk.addDossierToolbarButton({
       id: "duplicate-original-image",
@@ -20,12 +21,11 @@
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
       onClick: async function () {
-        console.log("🟡 Duplicate button clicked — initiating handler");
+        console.log(`${logPrefix} 🟡 Button clicked`);
 
         try {
           const selection = await ContentStationSdk.getSelection();
-
-          console.log("📦 Selection:", selection);
+          console.log(`${logPrefix} 📦 Selection:`, selection);
 
           const selected = selection && selection[0];
           if (!selected || selected.objectType !== "Image") {
@@ -37,36 +37,35 @@
           const ticket = await ContentStationSdk.getSessionTicket();
           const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
-          const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
+          const metaResp = await fetch(`${serverUrl}/webservices/StudioServer.svc/GetObjectMetaData`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
           });
-          const meta = await metadataRes.json();
+          const meta = await metaResp.json();
 
-          const binaryRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectBinary", {
+          const binaryResp = await fetch(`${serverUrl}/webservices/StudioServer.svc/GetObjectBinary`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
           });
-          const buffer = await binaryRes.arrayBuffer();
+          const buffer = await binaryResp.arrayBuffer();
 
           const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
-          const originalName = meta.Object.Name;
-          const newName = "web_" + originalName;
+          const newName = "web_" + meta.Object.Name;
           const file = new File([blob], newName, { type: blob.type });
 
-          const form = new FormData();
-          form.append("Ticket", ticket);
-          form.append("File", file);
+          const formData = new FormData();
+          formData.append("Ticket", ticket);
+          formData.append("File", file);
 
-          const uploadRes = await fetch(serverUrl + "/webservices/StudioServer.svc/UploadFile", {
+          const uploadResp = await fetch(`${serverUrl}/webservices/StudioServer.svc/UploadFile`, {
             method: "POST",
-            body: form
+            body: formData
           });
-          const uploadJson = await uploadRes.json();
+          const uploadData = await uploadResp.json();
 
-          const createRes = await fetch(serverUrl + "/webservices/StudioServer.svc/CreateObjects", {
+          const createResp = await fetch(`${serverUrl}/webservices/StudioServer.svc/CreateObjects`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -78,23 +77,23 @@
                   Category: meta.Object.Category,
                   Dossier: meta.Object.Dossier,
                   ContentMetaData: {
-                    ContentPath: uploadJson.Path
+                    ContentPath: uploadData.Path
                   }
                 }
               ]
             })
           });
 
-          const createResult = await createRes.json();
-          const newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
-          alert("✅ Created duplicate image with ID: " + newId);
+          const created = await createResp.json();
+          const newId = created.Objects?.[0]?.Id;
+          alert(`${logPrefix} ✅ Created duplicate image with ID: ${newId}`);
         } catch (err) {
-          console.error("❌ Failed to duplicate image:", err);
-          alert("❌ Failed to duplicate image. See console for details.");
+          console.error(`${logPrefix} ❌ Error during duplication`, err);
+          alert(`${logPrefix} ❌ Failed to duplicate image. See console.`);
         }
       }
     });
 
-    console.log("✅ DuplicateOriginalImage plugin: Button registered");
+    console.log(`${logPrefix} ✅ Toolbar button registered`);
   });
 })();
