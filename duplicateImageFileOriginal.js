@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 003 Plugin: Duplicate Original Image – Action button");
+  console.log("✅ 004 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -12,14 +12,14 @@
   }
 
   waitForContentStationSdk(() => {
-    console.log("⏳ Registering action...");
+    console.log("⏳ Registering dossier toolbar button...");
 
-    ContentStationSdk.createAction({
+    ContentStationSdk.addDossierToolbarButton({
       id: "duplicate-original-image",
       label: "Duplicate Original Image",
-      icon: "content_copy",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
-      onAction: async () => {
+      icon: "content_copy",
+      onClick: async () => {
         console.log("🟡 Duplicate button clicked — checking selection");
 
         let selection;
@@ -103,6 +103,6 @@
       }
     });
 
-    console.log("✅ DuplicateOriginalImage plugin: Action registered");
+    console.log("✅ DuplicateOriginalImage plugin: Button registered");
   });
 })();
