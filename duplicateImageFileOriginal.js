@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ 001 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -20,17 +20,24 @@
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
       onClick: async () => {
-        console.log("🟡 Duplicate button clicked");
+        console.log("🟡 Duplicate button clicked — checking selection");
+
+        let selection;
+        try {
+          selection = await ContentStationSdk.getCurrentSelection();
+        } catch (e) {
+          console.warn("⚠️ Could not get selection:", e);
+        }
+
+        console.log("📦 Selection:", selection);
+        const selected = selection?.[0];
+
+        if (!selected || selected.objectType !== "Image") {
+          alert("Please select a single image to duplicate.");
+          return;
+        }
 
         try {
-          const selection = await ContentStationSdk.getCurrentSelection();
-          const selected = selection?.[0];
-
-          if (!selected || selected.objectType !== "Image") {
-            alert("Please select a single image to duplicate.");
-            return;
-          }
-
           const objectId = selected.id;
           const ticket = await ContentStationSdk.getSessionTicket();
           const serverUrl = await ContentStationSdk.getStudioServerUrl();
