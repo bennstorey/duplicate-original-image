@@ -1,9 +1,5 @@
 (function () {
-  console.log("✅ A06 Plugin: Duplicate Original Image - Dossier Toolbar");
-
-  window.addEventListener("click", function () {
-    console.log("🧪 Global window click detected");
-  });
+  console.log("✅ A07 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -22,116 +18,83 @@
       id: "duplicate-original-image",
       label: "Duplicate Original Image",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
-      icon: "content_copy",
-      onClick: function () {
-        debugger;
-        console.log("🟡 Duplicate button clicked — initiating handler");
+      icon: "content_copy"
+    });
 
-        ContentStationSdk.getCurrentSelection()
-          .then(function (selection) {
-            console.log("📦 Selection:", selection);
-            var selected = selection && selection[0];
+    ContentStationSdk.onAction("duplicate-original-image", async () => {
+      console.log("🟡 Duplicate button clicked — initiating handler");
 
-            if (!selected || selected.objectType !== "Image") {
-              alert("Please select a single image to duplicate.");
-              return;
-            }
+      try {
+        const selection = await ContentStationSdk.getCurrentSelection();
+        console.log("📦 Selection:", selection);
 
-            var objectId = selected.id;
-            var ticket, serverUrl;
+        const selected = selection && selection[0];
+        if (!selected || selected.objectType !== "Image") {
+          alert("Please select a single image to duplicate.");
+          return;
+        }
 
-            ContentStationSdk.getSessionTicket()
-              .then(function (t) {
-                ticket = t;
-                return ContentStationSdk.getStudioServerUrl();
-              })
-              .then(function (url) {
-                serverUrl = url;
-                return fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
-                });
-              })
-              .then(function (res) { return res.json(); })
-              .then(function (meta) {
-                return fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectBinary", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
-                }).then(function (res) {
-                  return res.arrayBuffer().then(function (buffer) {
-                    return { buffer: buffer, meta: meta };
-                  });
-                });
-              })
-              .then(function (data) {
-                var buffer = data.buffer;
-                var meta = data.meta;
+        const objectId = selected.id;
+        const ticket = await ContentStationSdk.getSessionTicket();
+        const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
-                var blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
-                var originalName = meta.Object.Name;
-                var newName = "web_" + originalName;
-                var file = new File([blob], newName, { type: blob.type });
+        const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
+        });
+        const meta = await metadataRes.json();
 
-                var form = new FormData();
-                form.append("Ticket", ticket);
-                form.append("File", file);
+        const binaryRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectBinary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
+        });
+        const buffer = await binaryRes.arrayBuffer();
 
-                return fetch(serverUrl + "/webservices/StudioServer.svc/UploadFile", {
-                  method: "POST",
-                  body: form
-                }).then(function (res) { return res.json(); })
-                  .then(function (uploadJson) {
-                    var contentPath = uploadJson.Path;
-                    return fetch(serverUrl + "/webservices/StudioServer.svc/CreateObjects", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        Ticket: ticket,
-                        Objects: [
-                          {
-                            __classname__: "com.woodwing.assets.server.object.Asset",
-                            Name: newName,
-                            Category: meta.Object.Category,
-                            Dossier: meta.Object.Dossier,
-                            ContentMetaData: {
-                              ContentPath: contentPath
-                            }
-                          }
-                        ]
-                      })
-                    });
-                  });
-              })
-              .then(function (res) { return res.json(); })
-              .then(function (createResult) {
-                var newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
-                alert("✅ Created duplicate image with ID: " + newId);
-              })
-              .catch(function (err) {
-                console.error("❌ Failed to duplicate image:", err);
-                alert("❌ Failed to duplicate image. See console for details.");
-              });
+        const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
+        const originalName = meta.Object.Name;
+        const newName = "web_" + originalName;
+        const file = new File([blob], newName, { type: blob.type });
+
+        const form = new FormData();
+        form.append("Ticket", ticket);
+        form.append("File", file);
+
+        const uploadRes = await fetch(serverUrl + "/webservices/StudioServer.svc/UploadFile", {
+          method: "POST",
+          body: form
+        });
+        const uploadJson = await uploadRes.json();
+
+        const createRes = await fetch(serverUrl + "/webservices/StudioServer.svc/CreateObjects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            Ticket: ticket,
+            Objects: [
+              {
+                __classname__: "com.woodwing.assets.server.object.Asset",
+                Name: newName,
+                Category: meta.Object.Category,
+                Dossier: meta.Object.Dossier,
+                ContentMetaData: {
+                  ContentPath: uploadJson.Path
+                }
+              }
+            ]
           })
-          .catch(function (e) {
-            console.warn("⚠️ Could not get selection:", e);
-          });
+        });
+
+        const createResult = await createRes.json();
+        const newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
+        alert("✅ Created duplicate image with ID: " + newId);
+      } catch (err) {
+        console.error("❌ Failed to duplicate image:", err);
+        alert("❌ Failed to duplicate image. See console for details.");
       }
     });
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
-
-    // 🧪 Fallback handler registration via DOM
-    setTimeout(() => {
-      const button = document.querySelector('[data-id="duplicate-original-image"]');
-      if (button) {
-        button.addEventListener("click", function () {
-          console.log("🟡 Duplicate button clicked — workaround handler fired");
-        });
-      } else {
-        console.warn("❌ Could not find button in DOM for workaround handler");
-      }
-    }, 1000);
   });
 })();
