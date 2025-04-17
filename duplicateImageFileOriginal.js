@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A04 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A05 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   window.addEventListener("click", function () {
     console.log("🧪 Global window click detected");
@@ -121,5 +121,17 @@
     });
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
+
+    // 🧪 Fallback handler registration via DOM
+    setTimeout(() => {
+      const button = document.querySelector('[data-id="duplicate-original-image"]');
+      if (button) {
+        button.addEventListener("click", function () {
+          console.log("🟡 Duplicate button clicked — workaround handler fired");
+        });
+      } else {
+        console.warn("❌ Could not find button in DOM for workaround handler");
+      }
+    }, 1000);
   });
 })();
