@@ -1,5 +1,9 @@
 (function () {
-  console.log("✅ A03 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A04 Plugin: Duplicate Original Image - Dossier Toolbar");
+
+  window.addEventListener("click", function () {
+    console.log("🧪 Global window click detected");
+  });
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -20,6 +24,7 @@
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
       onClick: function () {
+        debugger;
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         ContentStationSdk.getCurrentSelection()
