@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A10 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A11 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -23,89 +23,81 @@
 
     console.log("✅ DuplicateOriginalImage plugin: Button registered");
 
-    // MutationObserver to attach click handler after button appears
-    const observer = new MutationObserver(() => {
-      const button = document.querySelector('[data-action="duplicate-original-image"]');
-      if (button && !button._duplicateHandlerAttached) {
-        button.addEventListener("click", async () => {
-          console.log("🟡 Duplicate button clicked — initiating handler");
+    // Register action handler exactly like Drag to InDesign plugin
+    ContentStationSdk.on("action", async ({ id }) => {
+      if (id !== "duplicate-original-image") return;
 
-          try {
-            const selection = await ContentStationSdk.getCurrentSelection();
-            console.log("📦 Selection:", selection);
+      console.log("🟡 Duplicate button clicked — initiating handler");
 
-            const selected = selection && selection[0];
-            if (!selected || selected.objectType !== "Image") {
-              alert("Please select a single image to duplicate.");
-              return;
-            }
+      try {
+        const selection = await ContentStationSdk.getCurrentSelection();
+        console.log("📦 Selection:", selection);
 
-            const objectId = selected.id;
-            const ticket = await ContentStationSdk.getSessionTicket();
-            const serverUrl = await ContentStationSdk.getStudioServerUrl();
+        const selected = selection && selection[0];
+        if (!selected || selected.objectType !== "Image") {
+          alert("Please select a single image to duplicate.");
+          return;
+        }
 
-            const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
-            });
-            const meta = await metadataRes.json();
+        const objectId = selected.id;
+        const ticket = await ContentStationSdk.getSessionTicket();
+        const serverUrl = await ContentStationSdk.getStudioServerUrl();
 
-            const binaryRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectBinary", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
-            });
-            const buffer = await binaryRes.arrayBuffer();
-
-            const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
-            const originalName = meta.Object.Name;
-            const newName = "web_" + originalName;
-            const file = new File([blob], newName, { type: blob.type });
-
-            const form = new FormData();
-            form.append("Ticket", ticket);
-            form.append("File", file);
-
-            const uploadRes = await fetch(serverUrl + "/webservices/StudioServer.svc/UploadFile", {
-              method: "POST",
-              body: form
-            });
-            const uploadJson = await uploadRes.json();
-
-            const createRes = await fetch(serverUrl + "/webservices/StudioServer.svc/CreateObjects", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                Ticket: ticket,
-                Objects: [
-                  {
-                    __classname__: "com.woodwing.assets.server.object.Asset",
-                    Name: newName,
-                    Category: meta.Object.Category,
-                    Dossier: meta.Object.Dossier,
-                    ContentMetaData: {
-                      ContentPath: uploadJson.Path
-                    }
-                  }
-                ]
-              })
-            });
-
-            const createResult = await createRes.json();
-            const newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
-            alert("✅ Created duplicate image with ID: " + newId);
-          } catch (err) {
-            console.error("❌ Failed to duplicate image:", err);
-            alert("❌ Failed to duplicate image. See console for details.");
-          }
+        const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
         });
-        button._duplicateHandlerAttached = true;
-        console.log("✅ Duplicate button handler attached via MutationObserver");
-        observer.disconnect();
+        const meta = await metadataRes.json();
+
+        const binaryRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectBinary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
+        });
+        const buffer = await binaryRes.arrayBuffer();
+
+        const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
+        const originalName = meta.Object.Name;
+        const newName = "web_" + originalName;
+        const file = new File([blob], newName, { type: blob.type });
+
+        const form = new FormData();
+        form.append("Ticket", ticket);
+        form.append("File", file);
+
+        const uploadRes = await fetch(serverUrl + "/webservices/StudioServer.svc/UploadFile", {
+          method: "POST",
+          body: form
+        });
+        const uploadJson = await uploadRes.json();
+
+        const createRes = await fetch(serverUrl + "/webservices/StudioServer.svc/CreateObjects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            Ticket: ticket,
+            Objects: [
+              {
+                __classname__: "com.woodwing.assets.server.object.Asset",
+                Name: newName,
+                Category: meta.Object.Category,
+                Dossier: meta.Object.Dossier,
+                ContentMetaData: {
+                  ContentPath: uploadJson.Path
+                }
+              }
+            ]
+          })
+        });
+
+        const createResult = await createRes.json();
+        const newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
+        alert("✅ Created duplicate image with ID: " + newId);
+      } catch (err) {
+        console.error("❌ Failed to duplicate image:", err);
+        alert("❌ Failed to duplicate image. See console for details.");
       }
     });
-
-    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();
