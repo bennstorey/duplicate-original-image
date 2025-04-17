@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A14 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A15 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -12,20 +12,32 @@
   }
 
   waitForContentStationSdk(function () {
-    console.log("⏳ Registering plugin via registerPlugin()...");
+    console.log("⏳ Registering dossier toolbar button...");
 
-    ContentStationSdk.registerPlugin({
-      actions: [
-        {
-          id: "duplicate-original-image",
-          label: "Duplicate Original Image",
-          section: "DossierToolbar",
-          icon: "content_copy",
-        }
-      ],
-      onAction: async ({ id }) => {
-        if (id !== "duplicate-original-image") return;
+    ContentStationSdk.addDossierToolbarButton({
+      id: "duplicate-original-image",
+      label: "Duplicate Original Image",
+      tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
+      icon: "content_copy"
+    });
 
+    console.log("✅ DuplicateOriginalImage plugin: Button registered");
+
+    // Workaround click handler like in Drag to InDesign
+    window.addEventListener("click", async () => {
+      console.log("🧪 Global window click detected");
+      const button = document.querySelector('[data-action-id="duplicate-original-image"]');
+      if (!button) {
+        console.warn("❌ Could not find button in DOM for workaround handler");
+        return;
+      }
+
+      // Ensure no double handler
+      if (button.dataset.handlerAttached) return;
+      button.dataset.handlerAttached = "true";
+
+      button.addEventListener("click", async (e) => {
+        e.stopPropagation();
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         try {
@@ -97,9 +109,7 @@
           console.error("❌ Failed to duplicate image:", err);
           alert("❌ Failed to duplicate image. See console for details.");
         }
-      }
+      });
     });
-
-    console.log("✅ DuplicateOriginalImage plugin: Button registered");
   });
 })();
