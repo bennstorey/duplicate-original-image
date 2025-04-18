@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A78 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A79 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -111,4 +111,11 @@
           content: `✅ Duplicated ${selection.length} image(s) successfully.`
         });
       } catch (err) {
-        console.e
+        console.error("❌ Failed to duplicate image(s):", err);
+        ContentStationSdk.showNotification({
+          content: `❌ Failed to duplicate one or more images. See console for details.`
+        });
+      }
+    }
+  });
+})();
