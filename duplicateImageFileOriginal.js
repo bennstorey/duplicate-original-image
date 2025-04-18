@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A55 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A56 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -37,12 +37,12 @@
 
           const objectId = selected.id;
 
-          const serverInfo = await ContentStationSdk.getServerInfo();
-          const serverUrl = serverInfo.url;
-          const ticket = serverInfo.ticket;
+          // Get server info from config
+          const serverUrl = config.serverUrl || config.studioServerUrl;
+          const ticket = config.ticket;
 
           if (!serverUrl || !ticket) {
-            throw new Error("Missing Studio Server URL or ticket from getServerInfo");
+            throw new Error("Missing serverUrl or ticket in config.");
           }
 
           const metadataRes = await fetch(
