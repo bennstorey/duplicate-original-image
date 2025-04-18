@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A77 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A78 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -9,7 +9,10 @@
       console.warn("⚠️ No session info available in signin callback");
       return;
     }
-    sessionInfo = info.session || {};
+    sessionInfo = {
+      ticket: info.Ticket,
+      studioServerUrl: info.Url
+    };
     console.log("🔍 Parsed session info:", sessionInfo);
   });
 
@@ -108,11 +111,4 @@
           content: `✅ Duplicated ${selection.length} image(s) successfully.`
         });
       } catch (err) {
-        console.error("❌ Failed to duplicate image(s):", err);
-        ContentStationSdk.showNotification({
-          content: `❌ Failed to duplicate one or more images. See console for details.`
-        });
-      }
-    }
-  });
-})();
+        console.e
