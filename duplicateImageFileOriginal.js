@@ -1,5 +1,10 @@
 (function () {
-  console.log("✅ A70 Plugin: Duplicate Original Image - Dossier Button");
+
+  console.log("✅ A71 Plugin: Duplicate Original Image - Dossier Button");
+
+const info = ContentStationSdk.getInfo();
+console.log("🧾 getInfo() result:", info);
+
 
   ContentStationSdk.addDossierToolbarButton({
     label: "Duplicate Original Image(s)",
