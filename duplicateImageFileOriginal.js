@@ -1,14 +1,16 @@
 (function () {
-  console.log("✅ A76 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A77 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
   ContentStationSdk.onSignin((info) => {
     console.log("🔑 Signin callback received:", info);
-    sessionInfo = {
-      ticket: info?.session?.ticket,
-      serverUrl: info?.session?.studioServerUrl
-    };
+    if (!info || typeof info !== "object") {
+      console.warn("⚠️ No session info available in signin callback");
+      return;
+    }
+    sessionInfo = info.session || {};
+    console.log("🔍 Parsed session info:", sessionInfo);
   });
 
   ContentStationSdk.addDossierToolbarButton({
@@ -21,10 +23,10 @@
       console.log("📦 Selection:", selection);
       console.log("📁 Dossier:", dossier);
 
-      const { ticket, serverUrl } = sessionInfo || {};
+      const { ticket, studioServerUrl: serverUrl } = sessionInfo || {};
 
       if (!ticket || !serverUrl) {
-        console.error("❌ Missing serverUrl or ticket in session info.");
+        console.error("❌ Missing serverUrl or ticket in session info:", sessionInfo);
         ContentStationSdk.showNotification({
           content: "❌ Cannot duplicate image: missing session info. Please sign out and sign in again."
         });
