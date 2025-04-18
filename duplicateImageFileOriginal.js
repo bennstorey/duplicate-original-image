@@ -1,235 +1,126 @@
-(() => {
-    /**
-     * Horizontal line, divider.
-     */
-    ContentStationSdk.createAction({
-        isLine: true,
-    });
+(function () {
+  console.log("✅ A70 Plugin: Duplicate Original Image - Dossier Button");
 
-    /**
-     * Action that will log in console all available data, including:
-     * - selection
-     * - dossier (if available)
-     * - info
-     */
-    ContentStationSdk.createAction({
-        title: 'Console.log all data',
-        onAction: (selection, dossier) => {
-            console.log('user clicked the custom context menu item');
-            console.log('> selection:', selection);
-            console.log('> dossier:', dossier);
-            console.log('> logon info:', ContentStationSdk.getInfo());
-        },
-    });
+  ContentStationSdk.addDossierToolbarButton({
+    label: "Duplicate Original Image(s)",
+    onInit: (button, selection) => {
+      button.isDisabled = !selection || selection.length === 0 || !selection.every(item => item.Type === "Image");
+    },
+    onAction: async (button, selection, dossier) => {
+      console.log("🟡 Duplicate dossier button clicked — initiating handler");
 
-    /**
-     * An example how to use 'onInit' handler and disable the action, in this case in multiselect.
-     */
-    ContentStationSdk.createAction({
-        title: 'Disabled in multiselect',
-        onInit: (config, selection) => {
-            config.isDisabled = selection.length > 1;
-        },
-    });
+      try {
+        console.log("📦 Selection:", selection);
+        console.log("📁 Dossier:", dossier);
 
-    /**
-     * An example how to use 'onInit' handler and change the title on the action based on selection.
-     */
-    ContentStationSdk.createAction({
-        onInit: (config, selection) => {
-            config.title = `Selection: ${selection.length} file(s)`;
-        },
-    });
+        const info = ContentStationSdk.getInfo();
+        const ticket = info?.session?.ticket;
+        const serverUrl = info?.session?.studioServerUrl;
 
-    /**
-     * Notification example.
-     */
-    ContentStationSdk.createAction({
-        title: 'Simple notification',
-        onAction: () => {
-            ContentStationSdk.showNotification({
-                content: 'Simple notification from <i>custom context menu action</i>.',
-            });
-        },
-    });
-
-    /**
-     * An example of dynamic submenu.
-     * Every selected file is mapped to a submenu action, which will console.log filename on click.
-     */
-    ContentStationSdk.createAction({
-        title: 'Dynamic submenu',
-        onInit: (config, selection) => {
-            config.submenu = selection.map((file) => {
-                return {
-                    title: file.Name,
-                    onAction: () => {
-                        console.log(file.Name);
-                    },
-                };
-            });
-        },
-    });
-
-    /**
-     * This action line will be enabled for File.Type 'Image' and in single selection only.
-     * The second, commented line of code, has the same condition, but would remove the action from context menu instead of disabling it.
-     */
-    ContentStationSdk.createAction({
-        title: 'Enabled for single Image',
-        onInit: (config, selection) => {
-            config.isDisabled = selection.length > 1 || selection[0].Type !== 'Image';
-            // config.isRemoved = selection.length > 1 || selection[0].Type !== 'Image';
-        },
-        onAction: (selection) => {
-            alert(`Hello, this is an Image with name: "${selection[0].Name}".`);
-        },
-    });
-
-    /**
-     * Other available SDK methods.
-     */
-    ContentStationSdk.createAction({
-        title: 'Other actions',
-        onInit: (config, selection, dossier) => {
-            config.submenu = [
-                {
-                    title: 'Refresh current search',
-                    onAction: () => {
-                        ContentStationSdk.refreshCurrentSearch();
-                    },
-                },
-                {
-                    title: 'Refresh selected files',
-                    onAction: () => {
-                        ContentStationSdk.refreshObjects(
-                            selection.map((file) => {
-                                return file.ID;
-                            }),
-                        );
-                    },
-                },
-                {
-                    title: 'Inject files in dossier',
-                    onInit: (configInjectFiles) => {
-                        configInjectFiles.isDisabled = dossier === undefined;
-                    },
-                    onAction: () => {
-                        ContentStationSdk.injectObjectsInDossier(dossier.ID, [
-                            {
-                                MetaData: {
-                                    BasicMetaData: {
-                                        ID: Math.floor(Math.random() * 100000).toString(),
-                                        Name: 'INJECTED FILE',
-                                    },
-                                },
-                            },
-                        ]);
-                    },
-                },
-            ];
-        },
-    });
-
-    /**
-     * This line will be available in Dossier only.
-     */
-    ContentStationSdk.createAction({
-        isLine: true,
-        onInit: (config, selection, dossier) => {
-            config.isRemoved = dossier === undefined;
-        },
-    });
-
-    /**
-     * This action line will be available in Dossier only.
-     */
-    ContentStationSdk.createAction({
-        title: 'Only visible in Dossier',
-        onInit: (config, selection, dossier) => {
-            config.isRemoved = dossier === undefined;
-        },
-    });
-
-    /**
-     * Attach global callbacks for signin and signout events.
-     */
-    ContentStationSdk.onSignin((info) => {
-        console.log('[sample-1] Sigin callback.', info);
-        if (info && !info.Ticket) {
-            console.log('Ticket is not available since Content Station is using cookie based authentication');
+        if (!ticket || !serverUrl) {
+          throw new Error("Missing serverUrl or ticket in session info.");
         }
-    });
 
-    ContentStationSdk.onSignout(() => {
-        console.log('[sample-1] Sigout callback.');
-    });
+        for (const selected of selection) {
+          const objectId = selected.id;
 
-    /**
-     * Buttons - use current dossier and selection
-     */
-    ContentStationSdk.addDossierToolbarButton({
-        onInit: (button) => {
-            button.label = 'Test';
-        },
-        onAction: (button, selection, dossier) => {
-            console.log('selection:', selection);
-            console.log('dossier:', dossier);
-            ContentStationSdk.showNotification({
-                content: `Selected ${selection.length} file(s). Dossier's name is '${dossier.Name}'. Check browser's console for more information.`,
-            });
-        },
-    });
+          const metadataRes = await fetch(
+            serverUrl + "/server/index.php?protocol=JSON&method=GetObjectMetaData",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
+            }
+          );
 
-    /**
-     * Buttons - set label on initialization and on action
-     */
-    ContentStationSdk.addDossierToolbarButton({
-        onInit: (button) => {
-            button.label = 'Dynamic label';
-        },
-        onAction: (button) => {
-            button.label = `Dynamic label(${Math.floor(Math.random() * 98) + 1})`;
-        },
-    });
+          if (!metadataRes.ok) {
+            const errText = await metadataRes.text();
+            throw new Error("Metadata request failed: " + errText);
+          }
 
-    /**
-     * Buttons - disable property
-     */
-    ContentStationSdk.addDossierToolbarButton({
-        label: 'Disabled',
-        isDisabled: true,
-    });
+          const meta = await metadataRes.json();
 
-    /**
-     * Buttons - isRemoved property
-     */
-    ContentStationSdk.addDossierToolbarButton({
-        label: 'Hidden',
-        isRemoved: true,
-        onInit: (button) => {
-            // Show button on initialization
-            button.isRemoved = false;
-        },
-        onAction: (button) => {
-            // Hide button on click
-            button.isRemoved = true;
-        },
-    });
+          const binaryRes = await fetch(
+            serverUrl + "/server/index.php?protocol=JSON&method=GetObjectBinary",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
+            }
+          );
 
-    /**
-     * Buttons - dynamically add new
-     */
-    ContentStationSdk.addDossierToolbarButton({
-  label: 'Add button',
-  onAction: (button) => {
-    ContentStationSdk.addDossierToolbarButton({
-      label: `New(${Math.floor(Math.random() * 98) + 1})`,
-      onAction: (newButton) => {
-        newButton.isRemoved = true;
-      },
-    });
-  },
-});
+          if (!binaryRes.ok) {
+            const errText = await binaryRes.text();
+            throw new Error("Binary fetch failed: " + errText);
+          }
 
+          const buffer = await binaryRes.arrayBuffer();
+
+          const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
+          const originalName = meta.Object.Name;
+          const newName = "web_" + originalName;
+          const file = new File([blob], newName, { type: blob.type });
+
+          const form = new FormData();
+          form.append("Ticket", ticket);
+          form.append("File", file);
+
+          const uploadRes = await fetch(
+            serverUrl + "/server/index.php?protocol=JSON&method=UploadFile",
+            {
+              method: "POST",
+              body: form
+            }
+          );
+
+          if (!uploadRes.ok) {
+            const errText = await uploadRes.text();
+            throw new Error("Upload failed: " + errText);
+          }
+
+          const uploadJson = await uploadRes.json();
+
+          const createRes = await fetch(
+            serverUrl + "/server/index.php?protocol=JSON&method=CreateObjects",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                Ticket: ticket,
+                Objects: [
+                  {
+                    __classname__: "com.woodwing.assets.server.object.Asset",
+                    Name: newName,
+                    Category: meta.Object.Category,
+                    Dossier: meta.Object.Dossier,
+                    ContentMetaData: {
+                      ContentPath: uploadJson.Path
+                    }
+                  }
+                ]
+              })
+            }
+          );
+
+          if (!createRes.ok) {
+            const errText = await createRes.text();
+            throw new Error("CreateObjects failed: " + errText);
+          }
+
+          const createResult = await createRes.json();
+          const newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
+          console.log("✅ Created duplicate image with ID:", newId);
+        }
+
+        ContentStationSdk.showNotification({
+          content: `✅ Duplicated ${selection.length} image(s) successfully.`
+        });
+      } catch (err) {
+        console.error("❌ Failed to duplicate image(s):", err);
+        ContentStationSdk.showNotification({
+          content: `❌ Failed to duplicate one or more images. See console for details.`
+        });
+      }
+    }
+  });
 })();
