@@ -1,5 +1,7 @@
+<script src="https://cdn.jsdelivr.net/gh/WoodWing/CSHTML-context-menu-actions/contextmenu-actions.min.js"></script>
+
 (function () {
-  console.log("✅ A62 Plugin: Duplicate Original Image - Context Menu");
+  console.log("✅ Context 01 Plugin: Duplicate Original Image - Context Menu");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -137,4 +139,3 @@
     console.log("✅ DuplicateOriginalImage plugin: Context menu item registered");
   });
 })();
-
