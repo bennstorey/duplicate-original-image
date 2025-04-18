@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A83 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B0 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -78,6 +78,7 @@
 
           const buffer = await binaryRes.arrayBuffer();
           const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
+          console.log("📏 Blob size:", blob.size);
           const originalName = meta.Object.Name;
           const newName = "web_" + originalName;
           const file = new File([blob], newName, { type: blob.type });
@@ -98,7 +99,7 @@
           );
 
           const rawUploadText = await uploadRes.text();
-          console.log("📤 Upload response text:", rawUploadText);
+          console.log("📤 Upload response text:", rawUploadText || '[empty]');
 
           if (!uploadRes.ok) {
             throw new Error(`UploadFile failed with status ${uploadRes.status}: ${rawUploadText}`);
@@ -162,4 +163,3 @@
     }
   });
 })();
-
