@@ -88,7 +88,16 @@
             }
           );
 
-          const uploadJson = await uploadRes.json();
+          const rawUploadText = await uploadRes.text();
+          console.log("📤 Upload response text:", rawUploadText);
+
+          let uploadJson;
+          try {
+            uploadJson = JSON.parse(rawUploadText);
+          } catch (e) {
+            console.error("❌ Failed to parse UploadFile JSON:", e);
+            throw new Error("UploadFile did not return JSON");
+          }
 
           const createRes = await fetch(
             `${serverUrl}/index.php?protocol=JSON&method=CreateObjects`,
