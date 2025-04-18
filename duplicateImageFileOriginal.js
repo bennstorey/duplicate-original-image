@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A82 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A83 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -12,7 +12,7 @@
       };
     }
     if (!sessionInfo?.ticket) {
-      console.warn("⚠️ Ticket not present — may be using cookie-based auth");
+      console.warn("⚠️ Ticket not present — using cookie-based auth");
     }
     console.log("🔍 Parsed session info:", sessionInfo);
   });
@@ -38,10 +38,10 @@
       const ticket = sessionInfo.ticket;
       const serverUrl = sessionInfo.studioServerUrl;
 
-      if (!serverUrl || (!ticket && !document.cookie.includes("PHPSESSID"))) {
-        console.error("❌ Missing serverUrl or ticket in session info:", sessionInfo);
+      if (!serverUrl) {
+        console.error("❌ Missing serverUrl in session info:", sessionInfo);
         ContentStationSdk.showNotification({
-          content: "❌ Cannot duplicate image: missing session info. Please sign out and sign in again."
+          content: "❌ Cannot duplicate image: missing server URL."
         });
         return;
       }
