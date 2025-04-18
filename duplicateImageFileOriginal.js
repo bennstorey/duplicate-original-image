@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A75 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A76 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
