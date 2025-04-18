@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A87 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A83 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -104,12 +104,17 @@
             throw new Error(`UploadFile failed with status ${uploadRes.status}: ${rawUploadText}`);
           }
 
+          if (!rawUploadText.trim()) {
+            console.error("❌ UploadFile returned empty body.");
+            throw new Error("UploadFile returned no data");
+          }
+
           let uploadJson;
           try {
             uploadJson = JSON.parse(rawUploadText);
           } catch (e) {
-            console.error("❌ Failed to parse UploadFile JSON:", e);
-            throw new Error("UploadFile did not return JSON");
+            console.error("❌ Failed to parse UploadFile JSON:", e, rawUploadText);
+            throw new Error("UploadFile did not return valid JSON");
           }
 
           const createRes = await fetch(
@@ -157,3 +162,4 @@
     }
   });
 })();
+
