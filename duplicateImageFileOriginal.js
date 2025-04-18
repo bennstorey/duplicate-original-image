@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A57 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A58 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -18,7 +18,7 @@
       label: "Duplicate Original Image",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
-      onAction: async function (config, selection, dossier) {
+      onAction: async function (_config, selection, dossier) {
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         try {
@@ -37,12 +37,12 @@
 
           const objectId = selected.id;
 
-          // Get server info from config
+          // ✅ Get ticket and server URL from SDK
           const { ticket } = await ContentStationSdk.getTicket();
           const { serverUrl } = await ContentStationSdk.getServerInfo();
-          
-          if (!ticket || !serverUrl) {
-            throw new Error("Could not get ticket or server URL from SDK.");
+
+          if (!serverUrl || !ticket) {
+            throw new Error("Missing serverUrl or ticket from SDK.");
           }
 
           const metadataRes = await fetch(
