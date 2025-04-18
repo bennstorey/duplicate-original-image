@@ -1,18 +1,19 @@
 (function () {
-  console.log("✅ A80 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A81 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
   ContentStationSdk.onSignin((info) => {
     console.log("🔑 Signin callback received:", info);
-    if (!info || typeof info !== "object") {
-      console.warn("⚠️ No session info available in signin callback");
-      return;
+    if (info && typeof info === "object") {
+      sessionInfo = {
+        ticket: info.Ticket || '',
+        studioServerUrl: info.Url || ''
+      };
     }
-    sessionInfo = {
-      ticket: info.Ticket,
-      studioServerUrl: info.Url
-    };
+    if (!sessionInfo?.ticket) {
+      console.warn("⚠️ Ticket not present — may be using cookie-based auth");
+    }
     console.log("🔍 Parsed session info:", sessionInfo);
   });
 
@@ -26,9 +27,15 @@
       console.log("📦 Selection:", selection);
       console.log("📁 Dossier:", dossier);
 
-      const { ticket, studioServerUrl: serverUrl } = sessionInfo || {};
+      if (!sessionInfo) {
+        sessionInfo = ContentStationSdk.getInfo();
+        console.log("🆗 Fallback: fetched session info via getInfo():", sessionInfo);
+      }
 
-      if (!ticket || !serverUrl) {
+      const ticket = sessionInfo.ticket;
+      const serverUrl = sessionInfo.studioServerUrl;
+
+      if (!ticket && !document.cookie.includes("PHPSESSID")) {
         console.error("❌ Missing serverUrl or ticket in session info:", sessionInfo);
         ContentStationSdk.showNotification({
           content: "❌ Cannot duplicate image: missing session info. Please sign out and sign in again."
@@ -45,7 +52,7 @@
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
+              body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId })
             }
           );
 
@@ -56,7 +63,7 @@
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
+              body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId, Version: 1 })
             }
           );
 
@@ -67,7 +74,7 @@
           const file = new File([blob], newName, { type: blob.type });
 
           const form = new FormData();
-          form.append("Ticket", ticket);
+          if (ticket) form.append("Ticket", ticket);
           form.append("File", file);
 
           const uploadRes = await fetch(
@@ -86,7 +93,7 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                Ticket: ticket,
+                ...(ticket ? { Ticket: ticket } : {}),
                 Objects: [
                   {
                     __classname__: "com.woodwing.assets.server.object.Asset",
