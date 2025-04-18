@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A86 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A87 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -90,13 +90,19 @@
             `${serverUrl}/index.php?protocol=JSON&method=UploadFile`,
             {
               method: "POST",
-              headers: ticket ? {} : { "X-Requested-With": "XMLHttpRequest" },
+              headers: {
+                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+              },
               body: form
             }
           );
 
           const rawUploadText = await uploadRes.text();
           console.log("📤 Upload response text:", rawUploadText);
+
+          if (!uploadRes.ok) {
+            throw new Error(`UploadFile failed with status ${uploadRes.status}: ${rawUploadText}`);
+          }
 
           let uploadJson;
           try {
