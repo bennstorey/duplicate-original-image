@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A52 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A53 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -39,18 +39,40 @@
           const ticket = config.ticket;
           const serverUrl = config.serverUrl;
 
-          const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
-          });
+          if (!serverUrl) {
+            throw new Error("Missing serverUrl in config");
+          }
+
+          const metadataRes = await fetch(
+            serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId })
+            }
+          );
+
+          if (!metadataRes.ok) {
+            const errText = await metadataRes.text();
+            throw new Error("Metadata request failed: " + errText);
+          }
+
           const meta = await metadataRes.json();
 
-          const binaryRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectBinary", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
-          });
+          const binaryRes = await fetch(
+            serverUrl + "/webservices/StudioServer.svc/GetObjectBinary",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ Ticket: ticket, ObjectId: objectId, Version: 1 })
+            }
+          );
+
+          if (!binaryRes.ok) {
+            const errText = await binaryRes.text();
+            throw new Error("Binary fetch failed: " + errText);
+          }
+
           const buffer = await binaryRes.arrayBuffer();
 
           const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
@@ -62,30 +84,47 @@
           form.append("Ticket", ticket);
           form.append("File", file);
 
-          const uploadRes = await fetch(serverUrl + "/webservices/StudioServer.svc/UploadFile", {
-            method: "POST",
-            body: form
-          });
+          const uploadRes = await fetch(
+            serverUrl + "/webservices/StudioServer.svc/UploadFile",
+            {
+              method: "POST",
+              body: form
+            }
+          );
+
+          if (!uploadRes.ok) {
+            const errText = await uploadRes.text();
+            throw new Error("Upload failed: " + errText);
+          }
+
           const uploadJson = await uploadRes.json();
 
-          const createRes = await fetch(serverUrl + "/webservices/StudioServer.svc/CreateObjects", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              Ticket: ticket,
-              Objects: [
-                {
-                  __classname__: "com.woodwing.assets.server.object.Asset",
-                  Name: newName,
-                  Category: meta.Object.Category,
-                  Dossier: meta.Object.Dossier,
-                  ContentMetaData: {
-                    ContentPath: uploadJson.Path
+          const createRes = await fetch(
+            serverUrl + "/webservices/StudioServer.svc/CreateObjects",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                Ticket: ticket,
+                Objects: [
+                  {
+                    __classname__: "com.woodwing.assets.server.object.Asset",
+                    Name: newName,
+                    Category: meta.Object.Category,
+                    Dossier: meta.Object.Dossier,
+                    ContentMetaData: {
+                      ContentPath: uploadJson.Path
+                    }
                   }
-                }
-              ]
-            })
-          });
+                ]
+              })
+            }
+          );
+
+          if (!createRes.ok) {
+            const errText = await createRes.text();
+            throw new Error("CreateObjects failed: " + errText);
+          }
 
           const createResult = await createRes.json();
           const newId = createResult.Objects && createResult.Objects[0] && createResult.Objects[0].Id;
