@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A53 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A54 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -37,14 +37,14 @@
 
           const objectId = selected.id;
           const ticket = config.ticket;
-          const serverUrl = config.serverUrl;
+          const serverUrl = config.studioServerUrl || config.serverUrl;
 
           if (!serverUrl) {
-            throw new Error("Missing serverUrl in config");
+            throw new Error("Missing serverUrl or studioServerUrl in config");
           }
 
           const metadataRes = await fetch(
-            serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData",
+            serverUrl + "/server/index.php?protocol=JSON&method=GetObjectMetaData",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@
           const meta = await metadataRes.json();
 
           const binaryRes = await fetch(
-            serverUrl + "/webservices/StudioServer.svc/GetObjectBinary",
+            serverUrl + "/server/index.php?protocol=JSON&method=GetObjectBinary",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -85,7 +85,7 @@
           form.append("File", file);
 
           const uploadRes = await fetch(
-            serverUrl + "/webservices/StudioServer.svc/UploadFile",
+            serverUrl + "/server/index.php?protocol=JSON&method=UploadFile",
             {
               method: "POST",
               body: form
@@ -100,7 +100,7 @@
           const uploadJson = await uploadRes.json();
 
           const createRes = await fetch(
-            serverUrl + "/webservices/StudioServer.svc/CreateObjects",
+            serverUrl + "/server/index.php?protocol=JSON&method=CreateObjects",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
