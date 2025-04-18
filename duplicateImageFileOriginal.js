@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A60 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A61 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -18,7 +18,7 @@
       label: "Duplicate Original Image",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
-      onAction: async function (_config, selection, dossier) {
+      onAction: async function (config, selection, dossier) {
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         try {
@@ -37,11 +37,10 @@
 
           const objectId = selected.id;
 
-          // ✅ Get ticket and server URL using config
-          const ticket = _config.session?.ticket;
-          const serverUrl = _config.session?.studioServerUrl;
+          const ticket = config?.session?.ticket;
+          const serverUrl = config?.session?.studioServerUrl;
 
-          if (!serverUrl || !ticket) {
+          if (!ticket || !serverUrl) {
             throw new Error("Missing serverUrl or ticket in config.");
           }
 
