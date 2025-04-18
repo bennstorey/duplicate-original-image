@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A79 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A80 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -38,7 +38,7 @@
 
       try {
         for (const selected of selection) {
-          const objectId = selected.id;
+          const objectId = selected.ID;
 
           const metadataRes = await fetch(
             `${serverUrl}/server/index.php?protocol=JSON&method=GetObjectMetaData`,
