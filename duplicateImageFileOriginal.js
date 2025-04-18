@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A73 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A75 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -87,7 +87,7 @@
                     __classname__: "com.woodwing.assets.server.object.Asset",
                     Name: newName,
                     Category: meta.Object.Category,
-                    Dossier: meta.Object.Dossier,
+                    Dossier: dossier.ID,
                     ContentMetaData: {
                       ContentPath: uploadJson.Path
                     }
