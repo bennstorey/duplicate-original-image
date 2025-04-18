@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A58 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A59 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -37,12 +37,13 @@
 
           const objectId = selected.id;
 
-          // ✅ Get ticket and server URL from SDK
-          const { ticket } = await ContentStationSdk.getTicket();
-          const { serverUrl } = await ContentStationSdk.getServerInfo();
+          // ✅ Get ticket and server URL using SDK context
+          const context = await ContentStationSdk.getContext();
+          const ticket = context.session?.ticket;
+          const serverUrl = context.session?.studioServerUrl;
 
           if (!serverUrl || !ticket) {
-            throw new Error("Missing serverUrl or ticket from SDK.");
+            throw new Error("Missing serverUrl or ticket from SDK context.");
           }
 
           const metadataRes = await fetch(
