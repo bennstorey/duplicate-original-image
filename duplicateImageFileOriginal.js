@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A81 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A82 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -8,7 +8,7 @@
     if (info && typeof info === "object") {
       sessionInfo = {
         ticket: info.Ticket || '',
-        studioServerUrl: info.Url || ''
+        studioServerUrl: info.Url || `${location.origin}/server`
       };
     }
     if (!sessionInfo?.ticket) {
@@ -30,12 +30,15 @@
       if (!sessionInfo) {
         sessionInfo = ContentStationSdk.getInfo();
         console.log("🆗 Fallback: fetched session info via getInfo():", sessionInfo);
+        if (!sessionInfo.studioServerUrl) {
+          sessionInfo.studioServerUrl = `${location.origin}/server`;
+        }
       }
 
       const ticket = sessionInfo.ticket;
       const serverUrl = sessionInfo.studioServerUrl;
 
-      if (!ticket && !document.cookie.includes("PHPSESSID")) {
+      if (!serverUrl || (!ticket && !document.cookie.includes("PHPSESSID"))) {
         console.error("❌ Missing serverUrl or ticket in session info:", sessionInfo);
         ContentStationSdk.showNotification({
           content: "❌ Cannot duplicate image: missing session info. Please sign out and sign in again."
@@ -48,7 +51,7 @@
           const objectId = selected.ID;
 
           const metadataRes = await fetch(
-            `${serverUrl}/server/index.php?protocol=JSON&method=GetObjectMetaData`,
+            `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -59,7 +62,7 @@
           const meta = await metadataRes.json();
 
           const binaryRes = await fetch(
-            `${serverUrl}/server/index.php?protocol=JSON&method=GetObjectBinary`,
+            `${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -78,7 +81,7 @@
           form.append("File", file);
 
           const uploadRes = await fetch(
-            `${serverUrl}/server/index.php?protocol=JSON&method=UploadFile`,
+            `${serverUrl}/index.php?protocol=JSON&method=UploadFile`,
             {
               method: "POST",
               body: form
@@ -88,7 +91,7 @@
           const uploadJson = await uploadRes.json();
 
           const createRes = await fetch(
-            `${serverUrl}/server/index.php?protocol=JSON&method=CreateObjects`,
+            `${serverUrl}/index.php?protocol=JSON&method=CreateObjects`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
