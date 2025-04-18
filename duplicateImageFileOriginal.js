@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A49 Plugin: Duplicate Original Image - Dossier Toolbar");
+  console.log("✅ A50 Plugin: Duplicate Original Image - Dossier Toolbar");
 
   function waitForContentStationSdk(callback) {
     if (typeof window.ContentStationSdk !== "undefined") {
@@ -18,10 +18,11 @@
       label: "Duplicate Original Image",
       tooltip: "Duplicate version 1 of the selected image with a web_ prefix",
       icon: "content_copy",
-      onAction: async function (config, selection, dossier) {
+      onAction: async function (pluginContext) {
         console.log("🟡 Duplicate button clicked — initiating handler");
 
         try {
+          const { selection, session, studioServerUrl } = pluginContext;
           console.log("📦 Selection:", selection);
 
           if (!selection || selection.length !== 1) {
@@ -36,10 +37,8 @@
           }
 
           const objectId = selected.id;
-
-          // Get the session and server URL from the SDK config
-          const ticket = config.session.Ticket;
-          const serverUrl = config.studioServerUrl;
+          const ticket = session.Ticket;
+          const serverUrl = studioServerUrl;
 
           const metadataRes = await fetch(serverUrl + "/webservices/StudioServer.svc/GetObjectMetaData", {
             method: "POST",
