@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A85 Plugin: Duplicate Original Image - Dossier Button"); 
+  console.log("✅ A86 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -54,7 +54,10 @@
             `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+              },
               body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId })
             }
           );
@@ -65,7 +68,10 @@
             `${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+              },
               body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId, Version: 1 })
             }
           );
@@ -84,6 +90,7 @@
             `${serverUrl}/index.php?protocol=JSON&method=UploadFile`,
             {
               method: "POST",
+              headers: ticket ? {} : { "X-Requested-With": "XMLHttpRequest" },
               body: form
             }
           );
@@ -103,7 +110,10 @@
             `${serverUrl}/index.php?protocol=JSON&method=CreateObjects`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+              },
               body: JSON.stringify({
                 ...(ticket ? { Ticket: ticket } : {}),
                 Objects: [
@@ -121,7 +131,10 @@
             }
           );
 
-          const createResult = await createRes.json();
+          const rawCreateText = await createRes.text();
+          console.log("📥 CreateObjects response text:", rawCreateText);
+
+          const createResult = JSON.parse(rawCreateText);
           const newId = createResult.Objects?.[0]?.Id;
           console.log("✅ Created duplicate image with ID:", newId);
         }
