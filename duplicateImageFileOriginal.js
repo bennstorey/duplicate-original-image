@@ -221,14 +221,15 @@
      * Buttons - dynamically add new
      */
     ContentStationSdk.addDossierToolbarButton({
-        label: 'Add',
-        onAction: (button) => {
-            this.addDossierToolbarButton({
-                label: `New(${Math.floor(Math.random() * 98) + 1})`,
-                onAction: (newButton) => {
-                    newButton.isRemoved = true;
-                },
-            });
-        },
+  label: 'Add button',
+  onAction: (button) => {
+    ContentStationSdk.addDossierToolbarButton({
+      label: `New(${Math.floor(Math.random() * 98) + 1})`,
+      onAction: (newButton) => {
+        newButton.isRemoved = true;
+      },
     });
+  },
+});
+
 })();
