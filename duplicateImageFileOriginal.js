@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B7 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B8 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -139,6 +139,7 @@
             body: JSON.stringify(payload)
           });
 
+          console.log("📥 CreateObjects response object:", createRes);
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response text:", rawCreateText);
 
