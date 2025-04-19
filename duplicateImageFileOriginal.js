@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B13 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B14 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -134,8 +134,7 @@
                 Dossier: { ID: dossier.ID },
                 ContentMetaData: {
                   ContentPath: uploadJson.Path
-                },
-                Metadata: meta.Object.Metadata || {}
+                }
               }
             ]
           };
