@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B2 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B3 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -101,11 +101,13 @@
 
           let uploadJson;
           try {
-            uploadJson = await uploadRes.json();
+            const rawText = await uploadRes.text();
+            console.log("📤 UploadFile raw response text:", rawText);
+
+            uploadJson = JSON.parse(rawText);
             console.log("📤 Upload response JSON:", uploadJson);
           } catch (e) {
-            const fallbackText = await uploadRes.text();
-            console.error("❌ UploadFile response not valid JSON:", e, fallbackText || '[empty]');
+            console.error("❌ UploadFile response not valid JSON:", e);
             throw new Error("UploadFile did not return valid JSON");
           }
 
