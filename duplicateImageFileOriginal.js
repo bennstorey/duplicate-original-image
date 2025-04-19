@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B8 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B9 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -106,12 +106,20 @@
           }
 
           const category = meta.Object.Category;
+          const publication = meta.Object.Publication;
+
           if (!category) {
             console.error("❌ Missing Category in object metadata:", meta);
             throw new Error("Missing Category in metadata for object ID: " + objectId);
           }
 
+          if (!publication) {
+            console.error("❌ Missing Publication in object metadata:", meta);
+            throw new Error("Missing Publication in metadata for object ID: " + objectId);
+          }
+
           console.log("📁 Original Category:", category);
+          console.log("📰 Original Publication:", publication);
 
           const payload = {
             ...(ticket ? { Ticket: ticket } : {}),
@@ -120,6 +128,7 @@
                 __classname__: "com.woodwing.assets.server.object.Asset",
                 Name: newName,
                 Category: category,
+                Publication: publication,
                 Dossier: { ID: dossier.ID },
                 ContentMetaData: {
                   ContentPath: uploadJson.Path
@@ -139,7 +148,6 @@
             body: JSON.stringify(payload)
           });
 
-          console.log("📥 CreateObjects response object:", createRes);
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response text:", rawCreateText);
 
