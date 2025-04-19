@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B3 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B4 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -114,6 +114,23 @@
           const category = meta.Object.Category;
           console.log("📁 Original Category:", category);
 
+          const payload = {
+            ...(ticket ? { Ticket: ticket } : {}),
+            Objects: [
+              {
+                __classname__: "com.woodwing.assets.server.object.Asset",
+                Name: newName,
+                Category: category,
+                Dossier: dossier.ID,
+                ContentMetaData: {
+                  ContentPath: uploadJson.Path
+                }
+              }
+            ]
+          };
+
+          console.log("📨 CreateObjects payload:", payload);
+
           const createRes = await fetch(
             `${serverUrl}/index.php?protocol=JSON&method=CreateObjects`,
             {
@@ -122,20 +139,7 @@
                 "Content-Type": "application/json",
                 ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
               },
-              body: JSON.stringify({
-                ...(ticket ? { Ticket: ticket } : {}),
-                Objects: [
-                  {
-                    __classname__: "com.woodwing.assets.server.object.Asset",
-                    Name: newName,
-                    Category: category,
-                    Dossier: dossier.ID,
-                    ContentMetaData: {
-                      ContentPath: uploadJson.Path
-                    }
-                  }
-                ]
-              })
+              body: JSON.stringify(payload)
             }
           );
 
