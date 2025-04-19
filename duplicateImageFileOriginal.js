@@ -127,7 +127,7 @@
             Objects: [
               {
                 __classname__: "com.woodwing.assets.server.object.Asset",
-                ObjectType: "Image",
+                Type: "Image",
                 Name: newName,
                 Category: category,
                 Publication: publication,
