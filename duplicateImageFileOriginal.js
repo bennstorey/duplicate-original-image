@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B6 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B7 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -120,7 +120,7 @@
                 __classname__: "com.woodwing.assets.server.object.Asset",
                 Name: newName,
                 Category: category,
-                Dossier: dossier.ID,
+                Dossier: { ID: dossier.ID },
                 ContentMetaData: {
                   ContentPath: uploadJson.Path
                 }
