@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B0 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B1 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -98,23 +98,13 @@
             }
           );
 
-          const rawUploadText = await uploadRes.text();
-          console.log("📤 Upload response text:", rawUploadText || '[empty]');
-
-          if (!uploadRes.ok) {
-            throw new Error(`UploadFile failed with status ${uploadRes.status}: ${rawUploadText}`);
-          }
-
-          if (!rawUploadText.trim()) {
-            console.error("❌ UploadFile returned empty body.");
-            throw new Error("UploadFile returned no data");
-          }
-
           let uploadJson;
           try {
-            uploadJson = JSON.parse(rawUploadText);
+            uploadJson = await uploadRes.json();
+            console.log("📤 Upload response JSON:", uploadJson);
           } catch (e) {
-            console.error("❌ Failed to parse UploadFile JSON:", e, rawUploadText);
+            const fallbackText = await uploadRes.text();
+            console.error("❌ UploadFile response not valid JSON:", e, fallbackText || '[empty]');
             throw new Error("UploadFile did not return valid JSON");
           }
 
