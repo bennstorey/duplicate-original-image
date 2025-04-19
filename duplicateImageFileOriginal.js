@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B11 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B12 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -120,12 +120,14 @@
 
           console.log("📁 Original Category:", category);
           console.log("📰 Original Publication:", publication);
+          console.log("📂 Upload Path:", uploadJson.Path);
 
           const payload = {
             ...(ticket ? { Ticket: ticket } : {}),
             Objects: [
               {
                 __classname__: "com.woodwing.assets.server.object.Asset",
+                ObjectType: "Image",
                 Name: newName,
                 Category: category,
                 Publication: publication,
