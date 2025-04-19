@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B9 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B10 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -148,11 +148,13 @@
             body: JSON.stringify(payload)
           });
 
+          console.log("🔎 CreateObjects HTTP status:", createRes.status);
+
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response text:", rawCreateText);
 
           if (!rawCreateText || rawCreateText.trim().length === 0) {
-            throw new Error("CreateObjects returned empty body");
+            throw new Error(`CreateObjects returned empty body. HTTP status: ${createRes.status}`);
           }
 
           let createResult;
