@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B15 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B16 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -108,6 +108,7 @@
 
           const category = meta.Object.Category;
           const publication = meta.Object.Publication;
+          const brand = meta.Object.Brand;
 
           if (!category) {
             console.error("❌ Missing Category in object metadata:", meta);
@@ -119,8 +120,13 @@
             throw new Error("Missing Publication in metadata for object ID: " + objectId);
           }
 
+          if (!brand) {
+            console.warn("⚠️ Brand not found in metadata — proceeding without it.");
+          }
+
           console.log("📁 Original Category:", category);
           console.log("📰 Original Publication:", publication);
+          console.log("🏷️ Brand:", brand);
           console.log("📂 Upload Path:", uploadJson.Path);
 
           const payload = {
@@ -132,6 +138,7 @@
                 Name: newName,
                 Category: category,
                 Publication: publication,
+                ...(brand ? { Brand: brand } : {}),
                 Dossier: { ID: dossier.ID },
                 ContentMetaData: {
                   ContentPath: uploadJson.Path
