@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B14 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B15 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -19,6 +19,7 @@
 
   ContentStationSdk.addDossierToolbarButton({
     label: "Duplicate Original Image(s)",
+    id: "duplicate-original-image-button",
     onInit: (button, selection) => {
       button.isDisabled = !selection || selection.length === 0 || !selection.every(item => item.Type === "Image");
     },
