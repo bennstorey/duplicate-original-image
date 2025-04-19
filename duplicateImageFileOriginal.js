@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B1 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B2 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -63,6 +63,7 @@
           );
 
           const meta = await metadataRes.json();
+          console.log("🧠 Fetched metadata:", meta);
 
           const binaryRes = await fetch(
             `${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`,
@@ -108,6 +109,9 @@
             throw new Error("UploadFile did not return valid JSON");
           }
 
+          const category = meta.Object.Category;
+          console.log("📁 Original Category:", category);
+
           const createRes = await fetch(
             `${serverUrl}/index.php?protocol=JSON&method=CreateObjects`,
             {
@@ -122,7 +126,7 @@
                   {
                     __classname__: "com.woodwing.assets.server.object.Asset",
                     Name: newName,
-                    Category: meta.Object.Category,
+                    Category: category,
                     Dossier: dossier.ID,
                     ContentMetaData: {
                       ContentPath: uploadJson.Path
