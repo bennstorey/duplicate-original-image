@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B5 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B6 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -50,32 +50,26 @@
         for (const selected of selection) {
           const objectId = selected.ID;
 
-          const metadataRes = await fetch(
-            `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
-              },
-              body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId })
-            }
-          );
+          const metadataRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId })
+          });
 
           const meta = await metadataRes.json();
           console.log("🧠 Fetched metadata:", meta);
 
-          const binaryRes = await fetch(
-            `${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
-              },
-              body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId, Version: 1 })
-            }
-          );
+          const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId, Version: 1 })
+          });
 
           const buffer = await binaryRes.arrayBuffer();
           const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
@@ -88,23 +82,23 @@
           if (ticket) form.append("Ticket", ticket);
           form.append("File", file);
 
-          const uploadRes = await fetch(
-            `${serverUrl}/index.php?protocol=JSON&method=UploadFile`,
-            {
-              method: "POST",
-              headers: {
-                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
-              },
-              body: form
-            }
-          );
+          const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
+            method: "POST",
+            headers: {
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: form
+          });
+
+          const uploadText = await uploadRes.text();
+          console.log("📤 UploadFile raw response text:", uploadText);
+          if (!uploadText || uploadText.trim().length === 0) {
+            throw new Error("UploadFile returned empty body");
+          }
 
           let uploadJson;
           try {
-            const rawText = await uploadRes.text();
-            console.log("📤 UploadFile raw response text:", rawText);
-
-            uploadJson = JSON.parse(rawText);
+            uploadJson = JSON.parse(uploadText);
             console.log("📤 Upload response JSON:", uploadJson);
           } catch (e) {
             console.error("❌ UploadFile response not valid JSON:", e);
@@ -134,24 +128,32 @@
             ]
           };
 
-          console.log("📨 CreateObjects payload:", payload);
+          console.log("📨 CreateObjects payload:", JSON.stringify(payload, null, 2));
 
-          const createRes = await fetch(
-            `${serverUrl}/index.php?protocol=JSON&method=CreateObjects`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
-              },
-              body: JSON.stringify(payload)
-            }
-          );
+          const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: JSON.stringify(payload)
+          });
 
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response text:", rawCreateText);
 
-          const createResult = JSON.parse(rawCreateText);
+          if (!rawCreateText || rawCreateText.trim().length === 0) {
+            throw new Error("CreateObjects returned empty body");
+          }
+
+          let createResult;
+          try {
+            createResult = JSON.parse(rawCreateText);
+          } catch (e) {
+            console.error("❌ CreateObjects response not valid JSON:", e);
+            throw new Error("CreateObjects did not return valid JSON");
+          }
+
           const newId = createResult.Objects?.[0]?.Id;
           console.log("✅ Created duplicate image with ID:", newId);
         }
