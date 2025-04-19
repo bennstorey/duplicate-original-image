@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B4 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B5 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -112,6 +112,11 @@
           }
 
           const category = meta.Object.Category;
+          if (!category) {
+            console.error("❌ Missing Category in object metadata:", meta);
+            throw new Error("Missing Category in metadata for object ID: " + objectId);
+          }
+
           console.log("📁 Original Category:", category);
 
           const payload = {
