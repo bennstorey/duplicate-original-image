@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B16 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B17 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -133,7 +133,7 @@
             ...(ticket ? { Ticket: ticket } : {}),
             Objects: [
               {
-                __classname__: "com.woodwing.assets.server.object.Asset",
+                __classname__: "WWAsset",
                 Type: "Image",
                 Name: newName,
                 Category: category,
