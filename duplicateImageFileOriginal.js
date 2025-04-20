@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E9 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E10 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -49,21 +49,22 @@
       try {
         const headers = { "Content-Type": "application/json", ...authHeader };
 
-        // Diagnostic phase
-        const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
-        });
-        const templateText = await templateRes.text();
-        console.log("🧱 Template raw:", templateText);
+        // Fetch template and metadata info
+        const [templateRes, metaRes] = await Promise.all([
+          fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
+          }),
+          fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
+          })
+        ]);
 
-        const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
-        });
-        const metaText = await metaRes.text();
+        const [templateText, metaText] = await Promise.all([templateRes.text(), metaRes.text()]);
+        console.log("🧱 Template raw:", templateText);
         console.log("📘 Metadata raw:", metaText);
 
         let template = null;
@@ -75,22 +76,34 @@
           throw new Error("Missing diagnostic info from server");
         }
 
-        // Show required metadata fields
-        const requiredFields = metadata.MetaDataInfo
-          .filter(field => field.Required)
-          .map(field => field.Name);
+        // Auto-populate payload based on template and required metadata
+        const payload = {
+          ...(ticket ? { Ticket: ticket } : {}),
+          Objects: [template.Object]
+        };
+        payload.Objects[0].Name = "test_from_template";
+        payload.Objects[0].TargetName = "test_from_template";
+        payload.Objects[0].Dossier = { ID: dossier.ID };
 
-        console.log("📌 Required metadata fields:", requiredFields);
-        console.log("🧾 Object template for Image:", template.Object);
+        console.log("📨 Final payload based on template:", JSON.stringify(payload, null, 2));
+
+        const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        const rawText = await createRes.text();
+        console.log("📥 CreateObjects response text:", rawText);
 
         ContentStationSdk.showNotification({
-          content: `📦 Diagnostics complete. Check console for required fields.`
+          content: `🔍 CreateObjects sent — check console for response.`
         });
 
       } catch (err) {
-        console.error("❌ Diagnostics fetch failed:", err);
+        console.error("❌ Operation failed:", err);
         ContentStationSdk.showNotification({
-          content: `❌ Diagnostics failed. See console.`
+          content: `❌ Operation failed. See console.`
         });
       }
     }
