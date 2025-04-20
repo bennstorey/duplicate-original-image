@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B30 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B31 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -141,9 +141,7 @@
                 ...(workflow ? { WorkflowStatus: workflow } : {}),
                 Dossier: { ID: dossier.ID },
                 ...(uploadJson.UploadToken ? { UploadToken: uploadJson.UploadToken } : {}),
-                ContentMetaData: {
-                  ContentPath: uploadJson.Path
-                }
+                Path: uploadJson.Path
               }
             ]
           };
