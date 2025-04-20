@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E16: Dynamic CreateObjects Payload Builder with ObjectType override");
+  console.log("🚀 Plugin E17: Dynamic CreateObjects Payload Builder with ObjectType override");
 
   let sessionInfo = null;
 
@@ -135,8 +135,15 @@
             body: JSON.stringify(finalPayload)
           });
 
+          console.log("📥 CreateObjects → HTTP", createRes.status, createRes.statusText);
+          console.log("📥 CreateObjects response headers:", [...createRes.headers.entries()]);
+
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects raw response:", rawCreateText);
+
+          if (!rawCreateText || rawCreateText.trim().length === 0) {
+            throw new Error(`CreateObjects returned empty body. HTTP ${createRes.status} ${createRes.statusText}`);
+          }
 
           let createResult;
           try {
@@ -144,8 +151,8 @@
             console.log("✅ Created object:", createResult);
             ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
           } catch (e) {
-            console.error("❌ Failed to parse CreateObjects result:", e);
-            ContentStationSdk.showNotification({ content: "❌ Failed to create object. See console." });
+            console.error("❌ CreateObjects response not valid JSON:", e);
+            ContentStationSdk.showNotification({ content: "❌ Failed to parse CreateObjects result. See console." });
           }
         } catch (err) {
           console.error("❌ Error during duplication flow:", err);
