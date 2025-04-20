@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E26: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("🚀 Plugin E27: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
@@ -124,12 +124,17 @@
           const payloadText = JSON.stringify(finalPayload, null, 2);
           console.log("📨 Final CreateObjects full request:", payloadText);
 
-          // 💡 Show download link in browser-safe way
-          const encoded = encodeURIComponent(payloadText);
-          const downloadUrl = `data:application/json;charset=utf-8,${encoded}`;
-          ContentStationSdk.showNotification({
-            content: `📦 Payload ready. <a href='${downloadUrl}' target='_blank' download='payload.json'>Click here to download</a>`
-          });
+          // ✅ Blob-based payload download
+          const blobPayload = new Blob([payloadText], { type: "application/json" });
+          const url = URL.createObjectURL(blobPayload);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "payload.json";
+          a.style.display = "none";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
@@ -161,3 +166,4 @@
     });
   });
 })();
+
