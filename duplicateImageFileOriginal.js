@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B28 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B29 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
