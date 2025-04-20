@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C2 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C3 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -142,7 +142,8 @@
                 ...(brand ? { Brand: brand } : {}),
                 ...(workflow ? { WorkflowStatus: workflow } : {}),
                 Dossier: { ID: dossier.ID },
-                UploadToken: uploadJson.UploadToken
+                UploadToken: uploadJson.UploadToken,
+                ContentPath: uploadJson.ContentPath
               }
             ]
           };
