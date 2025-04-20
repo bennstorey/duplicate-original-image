@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E25: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("🚀 Plugin E26: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
@@ -161,4 +161,3 @@
     });
   });
 })();
-
