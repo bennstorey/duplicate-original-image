@@ -49,7 +49,6 @@
       try {
         // --- FETCH TEMPLATE AND METADATA INFO FOR VALIDATION ---
         const diagHeaders = { "Content-Type": "application/json", ...authHeader };
-        const diagBody = JSON.stringify(ticket ? { Ticket: ticket } : {});
 
         const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
           method: "POST",
@@ -80,6 +79,22 @@
             console.log("📘 GetMetaDataInfo parsed:", parsed);
           } catch (e) {
             console.warn("⚠️ MetaDataInfo not valid JSON", e);
+          }
+        }
+
+        const workflowInfoRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetWorkflowInfo`, {
+          method: "POST",
+          headers: diagHeaders,
+          body: JSON.stringify(ticket ? { Ticket: ticket } : {})
+        });
+        const workflowRaw = await workflowInfoRes.text();
+        console.log("🧾 GetWorkflowInfo raw:", workflowRaw);
+        if (workflowRaw.trim()) {
+          try {
+            const parsed = JSON.parse(workflowRaw);
+            console.log("🧾 GetWorkflowInfo parsed:", parsed);
+          } catch (e) {
+            console.warn("⚠️ WorkflowInfo not valid JSON", e);
           }
         }
 
