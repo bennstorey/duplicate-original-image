@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ A99 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ D1 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -23,6 +23,9 @@
           console.warn("⚠️ Missing selection or dossier");
           return;
         }
+
+        // Placeholder for future duplication logic
+        console.log("🔧 Duplication logic to be implemented");
       } catch (err) {
         console.error("❌ Failed to duplicate image(s):", err);
       }
@@ -111,3 +114,4 @@
       .catch(err => console.warn("⚠️ GetMetaDataInfo request failed:", err));
   });
 })();
+
