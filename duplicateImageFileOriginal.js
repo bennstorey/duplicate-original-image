@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C12 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C13 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -28,7 +28,12 @@
       { method: "GetConfigInfo", label: "🧩 GetConfigInfo" },
       { method: "GetObjectTemplate", label: "🧱 GetObjectTemplate (Image)", payload: { Type: "Image" } },
       { method: "GetMetaDataInfo", label: "📘 GetMetaDataInfo (Image)", payload: { ObjectType: "Image" } },
-      { method: "GetObjectInfo", label: "🧮 GetObjectInfo" }
+      { method: "GetObjectInfo", label: "🧮 GetObjectInfo" },
+      { method: "GetServerInfo", label: "🔧 GetServerInfo" },
+      { method: "GetBrands", label: "🏷️ GetBrands" },
+      { method: "GetPublications", label: "📰 GetPublications" },
+      { method: "GetCategories", label: "📂 GetCategories" },
+      { method: "GetWorkflowInfo", label: "🧾 GetWorkflowInfo" }
     ];
 
     diagnostics.forEach(({ method, label, payload }) => {
