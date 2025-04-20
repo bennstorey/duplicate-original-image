@@ -1,11 +1,10 @@
 (function () {
-  console.log("✅ D5 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ D6 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
   if (typeof ContentStationSdk.registerDossierToolbarButton !== "function") {
-    console.error("❌ ContentStationSdk.registerDossierToolbarButton is not available. Check SDK version or plugin scope.");
-    return;
+    console.warn("⚠️ registerDossierToolbarButton not found — continuing anyway (may be contextual)");
   }
 
   ContentStationSdk.registerDossierToolbarButton({
