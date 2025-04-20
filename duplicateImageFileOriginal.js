@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C6 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A99 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -15,6 +15,42 @@
       console.warn("⚠️ Ticket not present — using cookie-based auth");
     }
     console.log("🔍 Parsed session info:", sessionInfo);
+
+    // Diagnostic fetches at plugin init
+    const ticket = sessionInfo?.ticket;
+    const serverUrl = sessionInfo?.studioServerUrl || `${location.origin}/server`;
+    const diagHeaders = {
+      "Content-Type": "application/json",
+      ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+    };
+    const diagBody = JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}) });
+
+    fetch(`${serverUrl}/index.php?protocol=JSON&method=GetConfigInfo`, {
+      method: "POST",
+      headers: diagHeaders,
+      body: diagBody
+    })
+      .then(res => res.json())
+      .then(json => console.log("🧩 GetConfigInfo:", json))
+      .catch(err => console.warn("⚠️ GetConfigInfo failed:", err));
+
+    fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
+      method: "POST",
+      headers: diagHeaders,
+      body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
+    })
+      .then(res => res.json())
+      .then(json => console.log("🧱 GetObjectTemplate (Image):", json))
+      .catch(err => console.warn("⚠️ GetObjectTemplate failed:", err));
+
+    fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+      method: "POST",
+      headers: diagHeaders,
+      body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
+    })
+      .then(res => res.json())
+      .then(json => console.log("📘 GetMetaDataInfo (Image):", json))
+      .catch(err => console.warn("⚠️ GetMetaDataInfo failed:", err));
   });
 
   ContentStationSdk.addDossierToolbarButton({
