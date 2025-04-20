@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E6 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E7 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -47,67 +47,61 @@
       }
 
       try {
-        const diagHeaders = { "Content-Type": "application/json", ...authHeader };
+        const headers = { "Content-Type": "application/json", ...authHeader };
 
-        const methods = [
-          {
-            label: "🧱 GetObjectTemplate",
-            method: "GetObjectTemplate",
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
-          },
-          {
-            label: "📘 GetMetaDataInfo",
-            method: "GetMetaDataInfo",
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
-          },
-          {
-            label: "🧾 GetWorkflowInfo",
-            method: "GetWorkflowInfo",
-            body: JSON.stringify(ticket ? { Ticket: ticket } : {})
-          },
-          {
-            label: "🧩 GetObjectTemplate (WWAsset)",
-            method: "GetObjectTemplate",
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "WWAsset" })
-          },
-          {
-            label: "📘 GetMetaDataInfo (WWAsset)",
-            method: "GetMetaDataInfo",
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "WWAsset" })
-          }
-        ];
+        // GetObjectTypes first
+        console.log("🔎 Fetching object types via GetObjectTypes...");
+        const typeRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTypes`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(ticket ? { Ticket: ticket } : {})
+        });
+        const rawType = await typeRes.text();
+        console.log("📦 GetObjectTypes raw:", rawType);
 
-        for (const { label, method, body } of methods) {
-          console.log(`${label} → Sending to ${method} with body:`, body);
-          const res = await fetch(`${serverUrl}/index.php?protocol=JSON&method=${method}`, {
+        let types = [];
+        try {
+          const parsed = JSON.parse(rawType);
+          types = parsed?.ObjectTypes || [];
+          console.log("📦 GetObjectTypes parsed:", types);
+        } catch (e) {
+          console.warn("⚠️ Failed to parse GetObjectTypes:", e);
+        }
+
+        if (!Array.isArray(types) || types.length === 0) {
+          console.error("❌ No object types returned — cannot proceed.");
+          return;
+        }
+
+        for (const type of types) {
+          const label = `🔍 ${type}`;
+
+          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
             method: "POST",
-            headers: diagHeaders,
-            body
+            headers,
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: type })
           });
-          console.log(`${label} → HTTP ${res.status} ${res.statusText}`);
-          console.log(`${label} → Headers:`, [...res.headers.entries()]);
+          const templateText = await templateRes.text();
+          console.log(`${label} → Template HTTP`, templateRes.status);
+          console.log(`${label} → Template raw:`, templateText);
 
-          const raw = await res.text();
-          console.log(`${label} raw:`, raw);
-          if (raw.trim()) {
-            try {
-              const parsed = JSON.parse(raw);
-              console.log(`${label} parsed:`, parsed);
-            } catch (e) {
-              console.warn(`${label} not valid JSON`, e);
-            }
-          } else {
-            console.warn(`${label} returned an empty body.`);
-          }
+          const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: type })
+          });
+          const metaText = await metaRes.text();
+          console.log(`${label} → Meta HTTP`, metaRes.status);
+          console.log(`${label} → Meta raw:`, metaText);
         }
 
         ContentStationSdk.showNotification({
-          content: `✅ Fetched diagnostics for image creation. See console.`
+          content: `✅ Diagnostics complete. Check console for all object types.`
         });
       } catch (err) {
-        console.error("❌ Failed during diagnostics:", err);
+        console.error("❌ Diagnostics fetch failed:", err);
         ContentStationSdk.showNotification({
-          content: `❌ Diagnostics failed. See console for details.`
+          content: `❌ Diagnostics failed. See console.`
         });
       }
     }
