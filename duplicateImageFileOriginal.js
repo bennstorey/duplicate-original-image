@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C17 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C18 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -161,6 +161,9 @@
             body: JSON.stringify(payload)
           });
 
+          console.log("🔎 CreateObjects HTTP status:", createRes.status, createRes.statusText);
+          console.log("🔍 CreateObjects headers:", [...createRes.headers.entries()]);
+
           const createText = await createRes.text();
           console.log("📥 CreateObjects response text:", createText);
 
@@ -168,7 +171,15 @@
             throw new Error("CreateObjects returned empty body");
           }
 
-          const createResult = JSON.parse(createText);
+          let createResult;
+          try {
+            createResult = JSON.parse(createText);
+            console.log("✅ CreateObjects result:", createResult);
+          } catch (e) {
+            console.error("❌ CreateObjects response not valid JSON:", e);
+            throw new Error("CreateObjects did not return valid JSON");
+          }
+
           const newId = createResult.Objects?.[0]?.Id;
           console.log("✅ Created duplicate image with ID:", newId);
         } catch (err) {
