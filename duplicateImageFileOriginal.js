@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ D3 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ D5 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
