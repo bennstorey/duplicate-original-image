@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E20: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("🚀 Plugin E21: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
