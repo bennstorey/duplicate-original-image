@@ -49,54 +49,30 @@
       try {
         const headers = { "Content-Type": "application/json", ...authHeader };
 
-        // GetObjectTypes first
-        console.log("🔎 Fetching object types via GetObjectTypes...");
-        const typeRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTypes`, {
+        const diagnostics = {};
+
+        // --- GetObjectTemplate for "Image" ---
+        const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
           method: "POST",
           headers,
-          body: JSON.stringify(ticket ? { Ticket: ticket } : {})
+          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
         });
-        const rawType = await typeRes.text();
-        console.log("📦 GetObjectTypes raw:", rawType);
+        const templateText = await templateRes.text();
+        console.log("🧱 Template raw:", templateText);
+        diagnostics.template = templateText;
 
-        let types = [];
-        try {
-          const parsed = JSON.parse(rawType);
-          types = parsed?.ObjectTypes || [];
-          console.log("📦 GetObjectTypes parsed:", types);
-        } catch (e) {
-          console.warn("⚠️ Failed to parse GetObjectTypes:", e);
-        }
-
-        if (!Array.isArray(types) || types.length === 0) {
-          console.error("❌ No object types returned — cannot proceed.");
-          return;
-        }
-
-        for (const type of types) {
-          const label = `🔍 ${type}`;
-
-          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: type })
-          });
-          const templateText = await templateRes.text();
-          console.log(`${label} → Template HTTP`, templateRes.status);
-          console.log(`${label} → Template raw:`, templateText);
-
-          const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: type })
-          });
-          const metaText = await metaRes.text();
-          console.log(`${label} → Meta HTTP`, metaRes.status);
-          console.log(`${label} → Meta raw:`, metaText);
-        }
+        // --- GetMetaDataInfo for "Image" ---
+        const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
+        });
+        const metaText = await metaRes.text();
+        console.log("📘 Metadata raw:", metaText);
+        diagnostics.metadata = metaText;
 
         ContentStationSdk.showNotification({
-          content: `✅ Diagnostics complete. Check console for all object types.`
+          content: `📦 Ready to build dynamic payload. Check console.`
         });
       } catch (err) {
         console.error("❌ Diagnostics fetch failed:", err);
