@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E3 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E4 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -47,125 +47,51 @@
       }
 
       try {
-        const workflowRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetWorkflowInfo`, {
+        // --- FETCH TEMPLATE AND METADATA INFO FOR VALIDATION ---
+        const diagHeaders = { "Content-Type": "application/json", ...authHeader };
+        const diagBody = JSON.stringify(ticket ? { Ticket: ticket } : {});
+
+        const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeader },
-          body: JSON.stringify(ticket ? { Ticket: ticket } : {})
+          headers: diagHeaders,
+          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
+        });
+        const templateRaw = await templateRes.text();
+        console.log("🧱 GetObjectTemplate raw:", templateRaw);
+        if (templateRaw.trim()) {
+          try {
+            const parsed = JSON.parse(templateRaw);
+            console.log("🧱 GetObjectTemplate parsed:", parsed);
+          } catch (e) {
+            console.warn("⚠️ Template not valid JSON", e);
+          }
+        }
+
+        const metaInfoRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+          method: "POST",
+          headers: diagHeaders,
+          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
+        });
+        const metaInfoRaw = await metaInfoRes.text();
+        console.log("📘 GetMetaDataInfo raw:", metaInfoRaw);
+        if (metaInfoRaw.trim()) {
+          try {
+            const parsed = JSON.parse(metaInfoRaw);
+            console.log("📘 GetMetaDataInfo parsed:", parsed);
+          } catch (e) {
+            console.warn("⚠️ MetaDataInfo not valid JSON", e);
+          }
+        }
+
+        ContentStationSdk.showNotification({
+          content: `✅ Fetched diagnostics for image creation. See console.`
         });
 
-        console.log("🧾 WorkflowInfo status:", workflowRes.status, workflowRes.statusText);
-        const rawWorkflow = await workflowRes.text();
-        console.log("🧾 WorkflowInfo raw:", rawWorkflow);
-
-        if (!rawWorkflow || rawWorkflow.trim().length === 0) {
-          throw new Error("GetWorkflowInfo returned empty body");
-        }
-
-        let workflowJson;
-        try {
-          workflowJson = JSON.parse(rawWorkflow);
-        } catch (e) {
-          throw new Error("GetWorkflowInfo did not return valid JSON");
-        }
-
-        for (const selected of selection) {
-          const objectId = selected.ID;
-
-          const metadataRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...authHeader },
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId })
-          });
-          const meta = await metadataRes.json();
-          console.log("🧠 Metadata:", meta);
-
-          const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...authHeader },
-            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId, Version: 1 })
-          });
-          const buffer = await binaryRes.arrayBuffer();
-          const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
-          const file = new File([blob], "web_" + meta.Object.Name, { type: blob.type });
-
-          const form = new FormData();
-          if (ticket) form.append("Ticket", ticket);
-          form.append("File", file);
-
-          const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
-            method: "POST",
-            headers: authHeader,
-            body: form
-          });
-
-          const uploadText = await uploadRes.text();
-          if (!uploadText || uploadText.trim().length === 0) throw new Error("UploadFile returned empty body");
-
-          let uploadJson;
-          try {
-            uploadJson = JSON.parse(uploadText);
-          } catch (e) {
-            throw new Error("UploadFile did not return valid JSON");
-          }
-
-          const { UploadToken, ContentPath } = uploadJson;
-          console.log("📤 UploadFile success — ContentPath:", ContentPath);
-          if (!UploadToken || !ContentPath) throw new Error("UploadFile missing required fields");
-
-          const payload = {
-            ...(ticket ? { Ticket: ticket } : {}),
-            Objects: [
-              {
-                __classname__: "WWAsset",
-                Type: "Image",
-                Name: "web_" + meta.Object.Name,
-                TargetName: "web_" + meta.Object.Name,
-                AssetInfo: { OriginalFileName: meta.Object.Name },
-                Category: meta.Object.Category,
-                Publication: meta.Object.Publication,
-                Format: meta.Object.Format,
-                ...(meta.Object.Brand ? { Brand: meta.Object.Brand } : {}),
-                ...(meta.Object.WorkflowStatus ? { WorkflowStatus: meta.Object.WorkflowStatus } : {}),
-                Dossier: { ID: dossier.ID },
-                UploadToken,
-                ContentPath
-              }
-            ]
-          };
-
-          console.log("📨 CreateObjects payload:", JSON.stringify(payload, null, 2));
-
-          const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...authHeader },
-            body: JSON.stringify(payload)
-          });
-
-          console.log("🔎 CreateObjects status:", createRes.status, createRes.statusText);
-          console.log("🔍 CreateObjects headers:", [...createRes.headers.entries()]);
-
-          const rawCreate = await createRes.text();
-          console.log("📥 CreateObjects raw response:", rawCreate);
-
-          if (!rawCreate || rawCreate.trim().length === 0) {
-            throw new Error(`CreateObjects returned empty body. HTTP status: ${createRes.status}`);
-          }
-
-          let createResult;
-          try {
-            createResult = JSON.parse(rawCreate);
-          } catch (e) {
-            throw new Error("CreateObjects response was not valid JSON");
-          }
-
-          const newId = createResult.Objects?.[0]?.Id;
-          console.log("✅ Created duplicate image with ID:", newId);
-        }
-
-        ContentStationSdk.showNotification({ content: `✅ Duplicated ${selection.length} image(s) successfully.` });
       } catch (err) {
-        console.error("❌ Failed to duplicate image(s):", err);
-        ContentStationSdk.showNotification({ content: `❌ Failed to duplicate image(s). See console for details.` });
+        console.error("❌ Failed during diagnostics:", err);
+        ContentStationSdk.showNotification({
+          content: `❌ Diagnostics failed. See console for details.`
+        });
       }
     }
   });
