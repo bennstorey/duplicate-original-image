@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E2 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E3 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -52,8 +52,21 @@
           headers: { "Content-Type": "application/json", ...authHeader },
           body: JSON.stringify(ticket ? { Ticket: ticket } : {})
         });
-        const workflowJson = await workflowRes.json();
-        console.log("🧾 WorkflowInfo:", workflowJson);
+
+        console.log("🧾 WorkflowInfo status:", workflowRes.status, workflowRes.statusText);
+        const rawWorkflow = await workflowRes.text();
+        console.log("🧾 WorkflowInfo raw:", rawWorkflow);
+
+        if (!rawWorkflow || rawWorkflow.trim().length === 0) {
+          throw new Error("GetWorkflowInfo returned empty body");
+        }
+
+        let workflowJson;
+        try {
+          workflowJson = JSON.parse(rawWorkflow);
+        } catch (e) {
+          throw new Error("GetWorkflowInfo did not return valid JSON");
+        }
 
         for (const selected of selection) {
           const objectId = selected.ID;
