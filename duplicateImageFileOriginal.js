@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B25 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B26 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -48,7 +48,6 @@
       }
 
       try {
-        // Fetch WorkflowInfo for additional required fields
         const workflowRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetWorkflowInfo`, {
           method: "POST",
           headers: {
@@ -134,6 +133,7 @@
               {
                 __classname__: "WWAsset",
                 ObjectType: "Image",
+                Type: "Image",
                 Name: newName,
                 Category: category,
                 Publication: publication,
@@ -141,6 +141,7 @@
                 ...(brand ? { Brand: brand } : {}),
                 ...(workflow ? { WorkflowStatus: workflow } : {}),
                 Dossier: { ID: dossier.ID },
+                ...(uploadJson.UploadToken ? { UploadToken: uploadJson.UploadToken } : {}),
                 ContentMetaData: {
                   ContentPath: uploadJson.Path
                 }
