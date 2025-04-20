@@ -1,106 +1,115 @@
 (function () {
-  console.log("✅ 010 DuplicateOriginalImage plugin: starting");
+  console.log("✅ A99 Plugin: Duplicate Original Image - Dossier Button");
 
-  function waitForContentStationSdk(callback) {
-    if (typeof ContentStationSdk !== "undefined") {
-      console.log("✅ DuplicateOriginalImage plugin: ContentStationSdk is available");
-      callback();
-    } else {
-      console.log("⏳ Waiting for ContentStationSdk...");
-      setTimeout(() => waitForContentStationSdk(callback), 500);
-    }
+  let sessionInfo = null;
+
+  if (typeof ContentStationSdk.registerDossierToolbarButton !== "function") {
+    console.warn("⚠️ registerDossierToolbarButton not found — continuing anyway (may be contextual)");
   }
 
-  waitForContentStationSdk(() => {
-    console.log("⏳ Registering DuplicateOriginalImage plugin");
+  ContentStationSdk.registerDossierToolbarButton({
+    id: "duplicate-original-image-button",
+    label: "Duplicate Original Image",
+    icon: "Copy",
+    onAction: async function (context) {
+      console.log("🟡 Duplicate dossier button clicked — initiating handler");
+      try {
+        const selection = context?.items;
+        const dossier = context?.dossier;
+        console.log("📦 Selection:", selection);
+        console.log("📁 Dossier:", dossier);
+        if (!selection || selection.length === 0 || !dossier) {
+          console.warn("⚠️ Missing selection or dossier");
+          return;
+        }
 
-    ContentStationSdk.registerPlugin({
-      initialize: (api) => {
-        console.log("✅ DuplicateOriginalImage plugin: Initialized");
-
-        api.addDossierToolbarButton({
-          id: "duplicate-original-image",
-          label: "Duplicate Original",
-          tooltip: "Duplicate the original version of the selected image",
-          icon: "content_copy",
-          onClick: async (context) => {
-            console.log("🟡 Duplicate button clicked");
-
-            try {
-              const selection = await api.getCurrentSelection();
-              console.log("🟢 Selection:", selection);
-              const selected = selection?.[0];
-
-              if (!selected || selected.objectType !== "Image") {
-                alert("Please select a single image to duplicate.");
-                return;
-              }
-
-              const objectId = selected.id;
-              const ticket = await api.getSessionTicket();
-              const serverUrl = await api.getStudioServerUrl();
-
-              const fetchJson = async (endpoint, body) => {
-                const res = await fetch(`${serverUrl}/webservices/StudioServer.svc/${endpoint}`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ Ticket: ticket, ...body })
-                });
-                return res.json();
-              };
-
-              const fetchBinary = async (endpoint, body) => {
-                const res = await fetch(`${serverUrl}/webservices/StudioServer.svc/${endpoint}`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ Ticket: ticket, ...body })
-                });
-                return res.arrayBuffer();
-              };
-
-              const meta = await fetchJson("GetObjectMetaData", { ObjectId: objectId });
-              const buffer = await fetchBinary("GetObjectBinary", { ObjectId: objectId, Version: 1 });
-
-              const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
-              const originalName = meta.Object.Name;
-              const newName = originalName.replace(/\.(\w+)$/, "_copy.$1");
-              const file = new File([blob], newName, { type: blob.type });
-
-              const form = new FormData();
-              form.append("Ticket", ticket);
-              form.append("File", file);
-
-              const uploadRes = await fetch(`${serverUrl}/webservices/StudioServer.svc/UploadFile`, {
-                method: "POST",
-                body: form
-              });
-
-              const uploadJson = await uploadRes.json();
-              const contentPath = uploadJson.Path;
-
-              const createResult = await fetchJson("CreateObjects", {
-                Objects: [{
-                  __classname__: "com.woodwing.assets.server.object.Asset",
-                  Name: newName,
-                  Category: meta.Object.Category,
-                  Dossier: meta.Object.Dossier,
-                  ContentMetaData: {
-                    ContentPath: contentPath
-                  }
-                }]
-              });
-
-              const newId = createResult.Objects?.[0]?.Id;
-              alert("✅ Created duplicate image with ID: " + newId);
-            } catch (err) {
-              console.error("❌ Failed to duplicate image:", err);
-              alert("❌ Failed to duplicate image. See console for details.");
-            }
-          }
-        });
-
-        console.log("✅ DuplicateOriginalImage plugin: Button registered");
+        // Placeholder for future duplication logic
+        console.log("🔧 Duplication logic to be implemented");
+      } catch (err) {
+        console.error("❌ Failed to duplicate image(s):", err);
       }
-    });
+    }
+  });
+
+  ContentStationSdk.onSignin((info) => {
+    console.log("🔑 Signin callback received:", info);
+    if (info && typeof info === "object") {
+      sessionInfo = {
+        ticket: info.Ticket || '',
+        studioServerUrl: info.Url || `${location.origin}/server`
+      };
+    }
+    if (!sessionInfo?.ticket) {
+      console.warn("⚠️ Ticket not present — using cookie-based auth");
+    }
+    console.log("🔍 Parsed session info:", sessionInfo);
+
+    const ticket = sessionInfo?.ticket;
+    const serverUrl = sessionInfo?.studioServerUrl || `${location.origin}/server`;
+    const diagHeaders = {
+      "Content-Type": "application/json",
+      ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+    };
+    const diagBody = JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}) });
+
+    fetch(`${serverUrl}/index.php?protocol=JSON&method=GetConfigInfo`, {
+      method: "POST",
+      headers: diagHeaders,
+      body: diagBody,
+      credentials: "include"
+    })
+      .then(async res => {
+        console.log("🧪 GetConfigInfo status:", res.status);
+        const text = await res.text();
+        console.log("🧪 GetConfigInfo raw text:", text);
+        if (text.trim().length === 0) return console.warn("⚠️ GetConfigInfo returned empty response body");
+        try {
+          const json = JSON.parse(text);
+          console.log("🧩 GetConfigInfo JSON:", json);
+        } catch (e) {
+          console.warn("⚠️ GetConfigInfo failed to parse JSON:", e);
+        }
+      })
+      .catch(err => console.warn("⚠️ GetConfigInfo request failed:", err));
+
+    fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
+      method: "POST",
+      headers: diagHeaders,
+      body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), RequestedType: "Image" }),
+      credentials: "include"
+    })
+      .then(async res => {
+        console.log("🧪 GetObjectTemplate status:", res.status);
+        const text = await res.text();
+        console.log("🧪 GetObjectTemplate raw text:", text);
+        if (text.trim().length === 0) return console.warn("⚠️ GetObjectTemplate returned empty response body");
+        try {
+          const json = JSON.parse(text);
+          console.log("🧱 GetObjectTemplate JSON:", json);
+        } catch (e) {
+          console.warn("⚠️ GetObjectTemplate failed to parse JSON:", e);
+        }
+      })
+      .catch(err => console.warn("⚠️ GetObjectTemplate request failed:", err));
+
+    fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+      method: "POST",
+      headers: diagHeaders,
+      body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" }),
+      credentials: "include"
+    })
+      .then(async res => {
+        console.log("🧪 GetMetaDataInfo status:", res.status);
+        const text = await res.text();
+        console.log("🧪 GetMetaDataInfo raw text:", text);
+        if (text.trim().length === 0) return console.warn("⚠️ GetMetaDataInfo returned empty response body");
+        try {
+          const json = JSON.parse(text);
+          console.log("📘 GetMetaDataInfo JSON:", json);
+        } catch (e) {
+          console.warn("⚠️ GetMetaDataInfo failed to parse JSON:", e);
+        }
+      })
+      .catch(err => console.warn("⚠️ GetMetaDataInfo request failed:", err));
   });
 })();
