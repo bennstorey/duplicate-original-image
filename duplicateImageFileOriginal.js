@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E15: Dynamic CreateObjects Payload Builder with ObjectType override");
+  console.log("🚀 Plugin E16: Dynamic CreateObjects Payload Builder with ObjectType override");
 
   let sessionInfo = null;
 
@@ -125,12 +125,14 @@
           if (!payloadObj.Publication && original.Publication) payloadObj.Publication = original.Publication;
           if (!payloadObj.AssetInfo) payloadObj.AssetInfo = { OriginalFileName: original.Name };
 
-          console.log("📨 Final CreateObjects payload:", payloadObj);
+          const finalPayload = { Objects: [payloadObj] };
+
+          console.log("📨 Final CreateObjects full request:", JSON.stringify(finalPayload, null, 2));
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
             headers,
-            body: JSON.stringify({ Objects: [payloadObj] })
+            body: JSON.stringify(finalPayload)
           });
 
           const rawCreateText = await createRes.text();
