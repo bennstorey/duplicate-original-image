@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E5 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E6 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -47,61 +47,63 @@
       }
 
       try {
-        // --- FETCH TEMPLATE AND METADATA INFO FOR VALIDATION ---
         const diagHeaders = { "Content-Type": "application/json", ...authHeader };
 
-        const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-          method: "POST",
-          headers: diagHeaders,
-          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
-        });
-        const templateRaw = await templateRes.text();
-        console.log("🧱 GetObjectTemplate raw:", templateRaw);
-        if (templateRaw.trim()) {
-          try {
-            const parsed = JSON.parse(templateRaw);
-            console.log("🧱 GetObjectTemplate parsed:", parsed);
-          } catch (e) {
-            console.warn("⚠️ Template not valid JSON", e);
+        const methods = [
+          {
+            label: "🧱 GetObjectTemplate",
+            method: "GetObjectTemplate",
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" })
+          },
+          {
+            label: "📘 GetMetaDataInfo",
+            method: "GetMetaDataInfo",
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
+          },
+          {
+            label: "🧾 GetWorkflowInfo",
+            method: "GetWorkflowInfo",
+            body: JSON.stringify(ticket ? { Ticket: ticket } : {})
+          },
+          {
+            label: "🧩 GetObjectTemplate (WWAsset)",
+            method: "GetObjectTemplate",
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "WWAsset" })
+          },
+          {
+            label: "📘 GetMetaDataInfo (WWAsset)",
+            method: "GetMetaDataInfo",
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "WWAsset" })
           }
-        }
+        ];
 
-        const metaInfoRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
-          method: "POST",
-          headers: diagHeaders,
-          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectType: "Image" })
-        });
-        const metaInfoRaw = await metaInfoRes.text();
-        console.log("📘 GetMetaDataInfo raw:", metaInfoRaw);
-        if (metaInfoRaw.trim()) {
-          try {
-            const parsed = JSON.parse(metaInfoRaw);
-            console.log("📘 GetMetaDataInfo parsed:", parsed);
-          } catch (e) {
-            console.warn("⚠️ MetaDataInfo not valid JSON", e);
-          }
-        }
+        for (const { label, method, body } of methods) {
+          console.log(`${label} → Sending to ${method} with body:`, body);
+          const res = await fetch(`${serverUrl}/index.php?protocol=JSON&method=${method}`, {
+            method: "POST",
+            headers: diagHeaders,
+            body
+          });
+          console.log(`${label} → HTTP ${res.status} ${res.statusText}`);
+          console.log(`${label} → Headers:`, [...res.headers.entries()]);
 
-        const workflowInfoRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetWorkflowInfo`, {
-          method: "POST",
-          headers: diagHeaders,
-          body: JSON.stringify(ticket ? { Ticket: ticket } : {})
-        });
-        const workflowRaw = await workflowInfoRes.text();
-        console.log("🧾 GetWorkflowInfo raw:", workflowRaw);
-        if (workflowRaw.trim()) {
-          try {
-            const parsed = JSON.parse(workflowRaw);
-            console.log("🧾 GetWorkflowInfo parsed:", parsed);
-          } catch (e) {
-            console.warn("⚠️ WorkflowInfo not valid JSON", e);
+          const raw = await res.text();
+          console.log(`${label} raw:`, raw);
+          if (raw.trim()) {
+            try {
+              const parsed = JSON.parse(raw);
+              console.log(`${label} parsed:`, parsed);
+            } catch (e) {
+              console.warn(`${label} not valid JSON`, e);
+            }
+          } else {
+            console.warn(`${label} returned an empty body.`);
           }
         }
 
         ContentStationSdk.showNotification({
           content: `✅ Fetched diagnostics for image creation. See console.`
         });
-
       } catch (err) {
         console.error("❌ Failed during diagnostics:", err);
         ContentStationSdk.showNotification({
