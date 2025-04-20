@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E22: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("🚀 Plugin E23: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
@@ -128,6 +128,16 @@
           const finalPayload = { Objects: [payloadObj] };
 
           console.log("📨 Final CreateObjects full request:", JSON.stringify(finalPayload, null, 2));
+
+          // Provide download link for payload
+          const payloadBlob = new Blob([JSON.stringify(finalPayload, null, 2)], { type: 'application/json' });
+          const payloadUrl = URL.createObjectURL(payloadBlob);
+          const a = document.createElement('a');
+          a.href = payloadUrl;
+          a.download = 'create-payload.json';
+          a.textContent = '📩 Download CreateObjects Payload for Support';
+          Object.assign(a.style, { position: 'absolute', top: '10px', left: '10px', background: '#eee', padding: '8px', zIndex: 9999 });
+          document.body.appendChild(a);
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
