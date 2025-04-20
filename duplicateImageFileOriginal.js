@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B24 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B25 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -48,6 +48,18 @@
       }
 
       try {
+        // Fetch WorkflowInfo for additional required fields
+        const workflowRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetWorkflowInfo`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+          },
+          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}) })
+        });
+        const workflowJson = await workflowRes.json();
+        console.log("🧾 WorkflowInfo:", workflowJson);
+
         for (const selected of selection) {
           const objectId = selected.ID;
 
@@ -110,6 +122,7 @@
           const publication = meta.Object.Publication;
           const brand = meta.Object.Brand;
           const format = meta.Object.Format;
+          const workflow = meta.Object.WorkflowStatus || workflowJson?.Workflow?.[0]?.WorkflowStatus?.[0]?.ID;
 
           if (!category) throw new Error("Missing Category in metadata for object ID: " + objectId);
           if (!publication) throw new Error("Missing Publication in metadata for object ID: " + objectId);
@@ -126,6 +139,7 @@
                 Publication: publication,
                 Format: format,
                 ...(brand ? { Brand: brand } : {}),
+                ...(workflow ? { WorkflowStatus: workflow } : {}),
                 Dossier: { ID: dossier.ID },
                 ContentMetaData: {
                   ContentPath: uploadJson.Path
