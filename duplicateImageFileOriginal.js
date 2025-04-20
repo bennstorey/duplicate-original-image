@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E8 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E9 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -49,9 +49,7 @@
       try {
         const headers = { "Content-Type": "application/json", ...authHeader };
 
-        const diagnostics = {};
-
-        // --- GetObjectTemplate for "Image" ---
+        // Diagnostic phase
         const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
           method: "POST",
           headers,
@@ -59,9 +57,7 @@
         });
         const templateText = await templateRes.text();
         console.log("🧱 Template raw:", templateText);
-        diagnostics.template = templateText;
 
-        // --- GetMetaDataInfo for "Image" ---
         const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
           method: "POST",
           headers,
@@ -69,11 +65,28 @@
         });
         const metaText = await metaRes.text();
         console.log("📘 Metadata raw:", metaText);
-        diagnostics.metadata = metaText;
+
+        let template = null;
+        let metadata = null;
+        try { template = JSON.parse(templateText); } catch (e) { console.warn("⚠️ Could not parse template JSON", e); }
+        try { metadata = JSON.parse(metaText); } catch (e) { console.warn("⚠️ Could not parse metadata JSON", e); }
+
+        if (!template?.Object || !metadata?.MetaDataInfo) {
+          throw new Error("Missing diagnostic info from server");
+        }
+
+        // Show required metadata fields
+        const requiredFields = metadata.MetaDataInfo
+          .filter(field => field.Required)
+          .map(field => field.Name);
+
+        console.log("📌 Required metadata fields:", requiredFields);
+        console.log("🧾 Object template for Image:", template.Object);
 
         ContentStationSdk.showNotification({
-          content: `📦 Ready to build dynamic payload. Check console.`
+          content: `📦 Diagnostics complete. Check console for required fields.`
         });
+
       } catch (err) {
         console.error("❌ Diagnostics fetch failed:", err);
         ContentStationSdk.showNotification({
