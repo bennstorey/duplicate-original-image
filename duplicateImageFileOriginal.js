@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C16 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C17 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -131,7 +131,6 @@
           const { UploadToken, ContentPath } = uploadJson;
 
           const baseObject = templateRes.Object || {};
-
           const newObject = {
             ...baseObject,
             __classname__: "WWAsset",
