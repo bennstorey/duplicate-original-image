@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E19: Dynamic CreateObjects Payload Builder with ObjectType override");
+  console.log("🚀 Plugin E20: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
@@ -98,7 +98,7 @@
           const metadataRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
             method: "POST",
             headers,
-            body: JSON.stringify({ ObjectType: "Image" })
+            body: JSON.stringify({ ObjectType: "WWAsset" })
           });
           const metadataText = await metadataRes.text();
           console.log("📘 GetMetaDataInfo raw:", metadataText);
@@ -113,7 +113,7 @@
           const payloadObj = { ...templateFields };
           payloadObj.__classname__ = "WWAsset";
           payloadObj.Type = "Image";
-          payloadObj.ObjectType = "Image";
+          payloadObj.ObjectType = "WWAsset";
           payloadObj.Name = `web_${original.Name}`;
           payloadObj.TargetName = `web_${original.Name}`;
           payloadObj.Dossier = { ID: dossier.ID };
