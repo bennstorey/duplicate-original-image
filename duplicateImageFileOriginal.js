@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E24: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("🚀 Plugin E25: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
@@ -59,9 +59,6 @@
             body: form
           });
 
-          console.log("📤 UploadFile → HTTP", uploadRes.status, uploadRes.statusText);
-          console.log("📤 UploadFile response headers:", [...uploadRes.headers.entries()]);
-
           const rawUploadText = await uploadRes.text();
           console.log("📤 UploadFile raw response:", rawUploadText);
 
@@ -86,7 +83,6 @@
             body: JSON.stringify({ Type: "Image" })
           });
           const templateText = await templateRes.text();
-          console.log("🧱 GetObjectTemplate raw:", templateText);
           let templateJson;
           try {
             templateJson = JSON.parse(templateText);
@@ -101,7 +97,6 @@
             body: JSON.stringify({ ObjectType: "WWAsset" })
           });
           const metadataText = await metadataRes.text();
-          console.log("📘 GetMetaDataInfo raw:", metadataText);
           try {
             const metadataJson = JSON.parse(metadataText);
             console.log("📘 GetMetaDataInfo parsed JSON:", metadataJson);
@@ -126,26 +121,21 @@
           if (!payloadObj.AssetInfo) payloadObj.AssetInfo = { OriginalFileName: original.Name };
 
           const finalPayload = { Objects: [payloadObj] };
-          console.log("📨 Final CreateObjects full request:", JSON.stringify(finalPayload, null, 2));
+          const payloadText = JSON.stringify(finalPayload, null, 2);
+          console.log("📨 Final CreateObjects full request:", payloadText);
 
-          // 🚀 Automatically trigger JSON download
-          const payloadBlob = new Blob([JSON.stringify(finalPayload, null, 2)], { type: 'application/json' });
-          const payloadUrl = URL.createObjectURL(payloadBlob);
-          const link = document.createElement('a');
-          link.href = payloadUrl;
-          link.download = 'create-payload.json';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          // 💡 Show download link in browser-safe way
+          const encoded = encodeURIComponent(payloadText);
+          const downloadUrl = `data:application/json;charset=utf-8,${encoded}`;
+          ContentStationSdk.showNotification({
+            content: `📦 Payload ready. <a href='${downloadUrl}' target='_blank' download='payload.json'>Click here to download</a>`
+          });
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
             headers,
-            body: JSON.stringify(finalPayload)
+            body: payloadText
           });
-
-          console.log("📥 CreateObjects → HTTP", createRes.status, createRes.statusText);
-          console.log("📥 CreateObjects response headers:", [...createRes.headers.entries()]);
 
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects raw response:", rawCreateText);
@@ -171,3 +161,4 @@
     });
   });
 })();
+
