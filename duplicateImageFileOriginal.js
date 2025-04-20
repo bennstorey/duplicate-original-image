@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C6 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C7 STABLE REVERT Plugin: Duplicate Original Image - Dossier Button");
 
 let sessionInfo = null;
 
