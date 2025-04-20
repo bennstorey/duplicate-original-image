@@ -1,7 +1,28 @@
 (function () {
-  console.log("✅ 1 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ 2 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
+
+  ContentStationSdk.registerDossierToolbarButton({
+    id: "duplicate-original-image-button",
+    label: "Duplicate Original Image",
+    icon: "Copy",
+    onAction: async function (context) {
+      console.log("🟡 Duplicate dossier button clicked — initiating handler");
+      try {
+        const selection = context?.items;
+        const dossier = context?.dossier;
+        console.log("📦 Selection:", selection);
+        console.log("📁 Dossier:", dossier);
+        if (!selection || selection.length === 0 || !dossier) {
+          console.warn("⚠️ Missing selection or dossier");
+          return;
+        }
+      } catch (err) {
+        console.error("❌ Failed to duplicate image(s):", err);
+      }
+    }
+  });
 
   ContentStationSdk.onSignin((info) => {
     console.log("🔑 Signin callback received:", info);
@@ -16,7 +37,6 @@
     }
     console.log("🔍 Parsed session info:", sessionInfo);
 
-    // Diagnostic fetches at plugin init
     const ticket = sessionInfo?.ticket;
     const serverUrl = sessionInfo?.studioServerUrl || `${location.origin}/server`;
     const diagHeaders = {
@@ -35,6 +55,7 @@
         console.log("🧪 GetConfigInfo status:", res.status);
         const text = await res.text();
         console.log("🧪 GetConfigInfo raw text:", text);
+        if (text.trim().length === 0) return console.warn("⚠️ GetConfigInfo returned empty response body");
         try {
           const json = JSON.parse(text);
           console.log("🧩 GetConfigInfo JSON:", json);
@@ -47,13 +68,14 @@
     fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
       method: "POST",
       headers: diagHeaders,
-      body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), Type: "Image" }),
+      body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), RequestedType: "Image" }),
       credentials: "include"
     })
       .then(async res => {
         console.log("🧪 GetObjectTemplate status:", res.status);
         const text = await res.text();
         console.log("🧪 GetObjectTemplate raw text:", text);
+        if (text.trim().length === 0) return console.warn("⚠️ GetObjectTemplate returned empty response body");
         try {
           const json = JSON.parse(text);
           console.log("🧱 GetObjectTemplate JSON:", json);
@@ -73,6 +95,7 @@
         console.log("🧪 GetMetaDataInfo status:", res.status);
         const text = await res.text();
         console.log("🧪 GetMetaDataInfo raw text:", text);
+        if (text.trim().length === 0) return console.warn("⚠️ GetMetaDataInfo returned empty response body");
         try {
           const json = JSON.parse(text);
           console.log("📘 GetMetaDataInfo JSON:", json);
@@ -82,6 +105,4 @@
       })
       .catch(err => console.warn("⚠️ GetMetaDataInfo request failed:", err));
   });
-
-  // ... [rest of the plugin code remains unchanged]
 })();
