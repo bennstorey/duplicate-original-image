@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C9 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C10 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -24,7 +24,7 @@
     };
     const diagBody = JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}) });
 
-    // Extended diagnostics to verify required fields
+    // Extended diagnostics
     const diagnostics = [
       { method: "GetConfigInfo", label: "🧩 GetConfigInfo" },
       { method: "GetObjectTemplate", label: "🧱 GetObjectTemplate (Image)", payload: { Type: "Image" } },
@@ -42,7 +42,7 @@
         .then(res => res.text())
         .then(txt => {
           console.log(`${label} text:`, txt);
-          try { console.log(`${label} JSON:`, JSON.parse(txt)); } catch (e) { console.warn(`⚠️ ${label} Invalid JSON`); }
+          try { console.log(`${label} JSON:`, JSON.parse(txt)); } catch (e) { console.warn(`⚠️ ${label} Invalid JSON`, e); }
         })
         .catch(err => console.warn(`⚠️ ${label} failed:`, err));
     });
@@ -55,7 +55,21 @@
       button.isDisabled = !selection || selection.length === 0 || !selection.every(item => item.Type === "Image");
     },
     onAction: async (button, selection, dossier) => {
-      console.log("🟡 Duplicate button clicked");
+      console.log("🟡 Duplicate dossier button clicked — initiating handler");
+      console.log("📦 Selection:", selection);
+      console.log("📁 Dossier:", dossier);
+
+      if (!sessionInfo) {
+        sessionInfo = ContentStationSdk.getInfo();
+        console.log("🆗 Fallback: fetched session info via getInfo():", sessionInfo);
+        if (!sessionInfo.studioServerUrl) {
+          sessionInfo.studioServerUrl = `${location.origin}/server`;
+        }
+      }
+
+      ContentStationSdk.showNotification({
+        content: `🧪 Button clicked — diagnostics only mode.`
+      });
     }
   });
 })();
