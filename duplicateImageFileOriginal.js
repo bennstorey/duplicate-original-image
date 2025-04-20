@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C13 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C14 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -96,9 +96,148 @@
         }
       }
 
-      ContentStationSdk.showNotification({
-        content: `🧪 Button clicked — diagnostics only mode.`
-      });
+      const ticket = sessionInfo.ticket;
+      const serverUrl = sessionInfo.studioServerUrl;
+
+      if (!serverUrl) {
+        console.error("❌ Missing serverUrl in session info:", sessionInfo);
+        ContentStationSdk.showNotification({
+          content: "❌ Cannot duplicate image: missing server URL."
+        });
+        return;
+      }
+
+      try {
+        const workflowRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetWorkflowInfo`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+          },
+          body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}) })
+        });
+        const workflowJson = await workflowRes.json();
+        console.log("🧾 WorkflowInfo:", workflowJson);
+
+        for (const selected of selection) {
+          const objectId = selected.ID;
+
+          const metadataRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId })
+          });
+
+          const meta = await metadataRes.json();
+          console.log("🧠 Fetched metadata:", meta);
+
+          const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ObjectId: objectId, Version: 1 })
+          });
+
+          const buffer = await binaryRes.arrayBuffer();
+          const blob = new Blob([buffer], { type: meta.Object.Format || "application/octet-stream" });
+          const originalName = meta.Object.Name;
+          const newName = "web_" + originalName;
+          const file = new File([blob], newName, { type: blob.type });
+
+          const form = new FormData();
+          if (ticket) form.append("Ticket", ticket);
+          form.append("File", file);
+
+          const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
+            method: "POST",
+            headers: {
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: form
+          });
+
+          const uploadText = await uploadRes.text();
+          console.log("📤 UploadFile raw response text:", uploadText);
+          if (!uploadText || uploadText.trim().length === 0) {
+            throw new Error("UploadFile returned empty body");
+          }
+
+          const uploadJson = JSON.parse(uploadText);
+          const { UploadToken, ContentPath } = uploadJson;
+          if (!UploadToken || !ContentPath) {
+            throw new Error("UploadFile missing UploadToken or ContentPath");
+          }
+
+          const category = meta.Object.Category;
+          const publication = meta.Object.Publication;
+          const brand = meta.Object.Brand;
+          const format = meta.Object.Format;
+          const workflow = meta.Object.WorkflowStatus || workflowJson?.Workflow?.[0]?.WorkflowStatus?.[0]?.ID;
+
+          if (!category || !publication || !format) {
+            throw new Error("Missing required metadata: Category, Publication or Format");
+          }
+
+          const payload = {
+            ...(ticket ? { Ticket: ticket } : {}),
+            Objects: [
+              {
+                __classname__: "WWAsset",
+                Type: "Image",
+                Name: newName,
+                TargetName: newName,
+                AssetInfo: {
+                  OriginalFileName: originalName
+                },
+                Category: category,
+                Publication: publication,
+                Format: format,
+                ...(brand ? { Brand: brand } : {}),
+                ...(workflow ? { WorkflowStatus: workflow } : {}),
+                Dossier: { ID: dossier.ID },
+                UploadToken,
+                ContentPath
+              }
+            ]
+          };
+
+          console.log("📨 CreateObjects payload:", JSON.stringify(payload, null, 2));
+
+          const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const rawCreateText = await createRes.text();
+          console.log("📥 CreateObjects response text:", rawCreateText);
+
+          if (!rawCreateText || rawCreateText.trim().length === 0) {
+            throw new Error(`CreateObjects returned empty body. HTTP status: ${createRes.status}`);
+          }
+
+          const createResult = JSON.parse(rawCreateText);
+          const newId = createResult.Objects?.[0]?.Id;
+          console.log("✅ Created duplicate image with ID:", newId);
+        }
+
+        ContentStationSdk.showNotification({
+          content: `✅ Duplicated ${selection.length} image(s) successfully.`
+        });
+      } catch (err) {
+        console.error("❌ Failed to duplicate image(s):", err);
+        ContentStationSdk.showNotification({
+          content: `❌ Failed to duplicate one or more images. See console for details.`
+        });
+      }
     }
   });
 })();
