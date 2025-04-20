@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E21: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("🚀 Plugin E22: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
 
   let sessionInfo = null;
 
@@ -113,7 +113,7 @@
           const payloadObj = { ...templateFields };
           payloadObj.__classname__ = "WWAsset";
           payloadObj.Type = "Image";
-          payloadObj.ObjectType = "WWAsset";
+          payloadObj.ObjectType = "Image";
           payloadObj.Name = `web_${original.Name}`;
           payloadObj.TargetName = `web_${original.Name}`;
           payloadObj.Dossier = { ID: dossier.ID };
