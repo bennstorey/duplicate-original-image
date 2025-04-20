@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E14: Dynamic CreateObjects Payload Builder with ObjectType override");
+  console.log("🚀 Plugin E15: Dynamic CreateObjects Payload Builder with ObjectType override");
 
   let sessionInfo = null;
 
@@ -85,22 +85,35 @@
             headers,
             body: JSON.stringify({ Type: "Image" })
           });
-          const templateJson = await templateRes.json();
-          const templateFields = templateJson?.Objects?.[0] || {};
-          console.log("🧱 Template fields:", templateFields);
+          const templateText = await templateRes.text();
+          console.log("🧱 GetObjectTemplate raw:", templateText);
+          let templateJson;
+          try {
+            templateJson = JSON.parse(templateText);
+            console.log("🧱 Template parsed JSON:", templateJson);
+          } catch (e) {
+            console.warn("⚠️ GetObjectTemplate not valid JSON", e);
+          }
 
           const metadataRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
             method: "POST",
             headers,
             body: JSON.stringify({ ObjectType: "Image" })
           });
-          const metadataJson = await metadataRes.json();
-          console.log("📘 GetMetaDataInfo fields:", metadataJson);
+          const metadataText = await metadataRes.text();
+          console.log("📘 GetMetaDataInfo raw:", metadataText);
+          try {
+            const metadataJson = JSON.parse(metadataText);
+            console.log("📘 GetMetaDataInfo parsed JSON:", metadataJson);
+          } catch (e) {
+            console.warn("⚠️ GetMetaDataInfo not valid JSON", e);
+          }
 
+          const templateFields = templateJson?.Objects?.[0] || {};
           const payloadObj = { ...templateFields };
           payloadObj.__classname__ = "WWAsset";
           payloadObj.Type = "Image";
-          payloadObj.ObjectType = "Image"; // explicit inclusion from server-confirmed
+          payloadObj.ObjectType = "Image";
           payloadObj.Name = `web_${original.Name}`;
           payloadObj.TargetName = `web_${original.Name}`;
           payloadObj.Dossier = { ID: dossier.ID };
@@ -119,6 +132,7 @@
             headers,
             body: JSON.stringify({ Objects: [payloadObj] })
           });
+
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects raw response:", rawCreateText);
 
