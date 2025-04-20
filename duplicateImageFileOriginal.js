@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ D1 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ D3 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -114,4 +114,3 @@
       .catch(err => console.warn("⚠️ GetMetaDataInfo request failed:", err));
   });
 })();
-
