@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B27 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B28 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -131,9 +131,8 @@
             ...(ticket ? { Ticket: ticket } : {}),
             Objects: [
               {
-                __classname__: "Image",
+                __classname__: "WWAsset",
                 ObjectType: "Image",
-                Type: "Image",
                 Name: newName,
                 Category: category,
                 Publication: publication,
