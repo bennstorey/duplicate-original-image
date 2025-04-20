@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C10 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C11 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -24,7 +24,6 @@
     };
     const diagBody = JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}) });
 
-    // Extended diagnostics
     const diagnostics = [
       { method: "GetConfigInfo", label: "🧩 GetConfigInfo" },
       { method: "GetObjectTemplate", label: "🧱 GetObjectTemplate (Image)", payload: { Type: "Image" } },
@@ -33,18 +32,33 @@
     ];
 
     diagnostics.forEach(({ method, label, payload }) => {
-      const body = JSON.stringify({ ...(ticket ? { Ticket: ticket } : {}), ...(payload || {}) });
+      const fullPayload = { ...(ticket ? { Ticket: ticket } : {}), ...(payload || {}) };
+      console.log(`📤 Sending ${label}:`, fullPayload);
+
       fetch(`${serverUrl}/index.php?protocol=JSON&method=${method}`, {
         method: "POST",
         headers: diagHeaders,
-        body
+        body: JSON.stringify(fullPayload)
       })
-        .then(res => res.text())
-        .then(txt => {
-          console.log(`${label} text:`, txt);
-          try { console.log(`${label} JSON:`, JSON.parse(txt)); } catch (e) { console.warn(`⚠️ ${label} Invalid JSON`, e); }
+        .then(async res => {
+          console.log(`${label} → HTTP ${res.status} ${res.statusText}`);
+          const raw = await res.text();
+          console.log(`${label} raw response:`, raw);
+          try {
+            const parsed = JSON.parse(raw);
+            console.log(`${label} parsed JSON:`, parsed);
+          } catch (e) {
+            console.warn(`⚠️ ${label} response not valid JSON`, e);
+            ContentStationSdk.showNotification({
+              content: `⚠️ ${label} failed — response not valid JSON` });
+          }
         })
-        .catch(err => console.warn(`⚠️ ${label} failed:`, err));
+        .catch(err => {
+          console.warn(`⚠️ ${label} fetch failed:`, err);
+          ContentStationSdk.showNotification({
+            content: `❌ ${label} failed to load.`
+          });
+        });
     });
   });
 
