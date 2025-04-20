@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E1 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E2 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -96,6 +96,7 @@
           }
 
           const { UploadToken, ContentPath } = uploadJson;
+          console.log("📤 UploadFile success — ContentPath:", ContentPath);
           if (!UploadToken || !ContentPath) throw new Error("UploadFile missing required fields");
 
           const payload = {
@@ -126,6 +127,9 @@
             headers: { "Content-Type": "application/json", ...authHeader },
             body: JSON.stringify(payload)
           });
+
+          console.log("🔎 CreateObjects status:", createRes.status, createRes.statusText);
+          console.log("🔍 CreateObjects headers:", [...createRes.headers.entries()]);
 
           const rawCreate = await createRes.text();
           console.log("📥 CreateObjects raw response:", rawCreate);
