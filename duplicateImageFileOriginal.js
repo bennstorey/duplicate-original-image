@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C1 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C2 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -73,6 +73,7 @@
 
           const meta = await metadataRes.json();
           console.log("🧠 Fetched metadata:", meta);
+          console.log("🧠 Full meta.Object:", meta?.Object);
 
           const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
             method: "POST",
@@ -133,6 +134,7 @@
               {
                 __classname__: "WWAsset",
                 Type: "Image",
+                ObjectType: "Image",
                 Name: newName,
                 Category: category,
                 Publication: publication,
@@ -157,6 +159,7 @@
           });
 
           console.log("🔎 CreateObjects HTTP status:", createRes.status, createRes.statusText);
+          console.log("🔍 Response headers:", [...createRes.headers.entries()]);
 
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response text:", rawCreateText);
