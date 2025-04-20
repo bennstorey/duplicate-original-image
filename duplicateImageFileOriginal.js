@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C11 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C12 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -44,13 +44,23 @@
           console.log(`${label} → HTTP ${res.status} ${res.statusText}`);
           const raw = await res.text();
           console.log(`${label} raw response:`, raw);
+
+          if (!raw || raw.trim().length === 0) {
+            console.warn(`⚠️ ${label} returned empty body.`);
+            ContentStationSdk.showNotification({
+              content: `⚠️ ${label} returned no content.`
+            });
+            return;
+          }
+
           try {
             const parsed = JSON.parse(raw);
             console.log(`${label} parsed JSON:`, parsed);
           } catch (e) {
             console.warn(`⚠️ ${label} response not valid JSON`, e);
             ContentStationSdk.showNotification({
-              content: `⚠️ ${label} failed — response not valid JSON` });
+              content: `⚠️ ${label} failed — response not valid JSON`
+            });
           }
         })
         .catch(err => {
