@@ -1,5 +1,5 @@
 (function () {
-  console.log("🚀 Plugin E27: Dynamic CreateObjects Payload Builder with ObjectType override (WWAsset)");
+  console.log("✅ E28 Plugin: Duplicate Original Image - Clean Version");
 
   let sessionInfo = null;
 
@@ -20,8 +20,8 @@
     };
 
     ContentStationSdk.addDossierToolbarButton({
-      label: "Dynamic Duplicate Image",
-      id: "dynamic-duplicate-image-button",
+      label: "Duplicate Image(s)",
+      id: "duplicate-image-button",
       onInit: (button, selection) => {
         button.isDisabled = !selection || selection.length === 0 || !selection.every(item => item.Type === "Image");
       },
@@ -45,14 +45,11 @@
           });
           const buffer = await binaryRes.arrayBuffer();
           const blob = new Blob([buffer], { type: original.Format || 'application/octet-stream' });
-          console.log("📏 Blob size:", blob.size);
           const file = new File([blob], `web_${original.Name}`, { type: blob.type });
-          console.log("📝 File details:", file.name, file.type, file.size);
 
           const form = new FormData();
           form.append("File", file);
 
-          console.log("📤 Uploading file to UploadFile...");
           const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
             method: "POST",
             headers: {},
@@ -60,104 +57,46 @@
           });
 
           const rawUploadText = await uploadRes.text();
-          console.log("📤 UploadFile raw response:", rawUploadText);
-
           if (!rawUploadText || rawUploadText.trim().length === 0) {
             throw new Error("UploadFile returned empty body");
           }
 
-          let uploadJson;
-          try {
-            uploadJson = JSON.parse(rawUploadText);
-            console.log("📤 UploadFile parsed JSON:", uploadJson);
-          } catch (e) {
-            console.error("❌ UploadFile response not valid JSON:", e);
-            throw new Error("UploadFile did not return valid JSON");
-          }
-
+          const uploadJson = JSON.parse(rawUploadText);
           const { UploadToken, ContentPath } = uploadJson;
 
-          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ Type: "Image" })
-          });
-          const templateText = await templateRes.text();
-          let templateJson;
-          try {
-            templateJson = JSON.parse(templateText);
-            console.log("🧱 Template parsed JSON:", templateJson);
-          } catch (e) {
-            console.warn("⚠️ GetObjectTemplate not valid JSON", e);
-          }
-
-          const metadataRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ ObjectType: "WWAsset" })
-          });
-          const metadataText = await metadataRes.text();
-          try {
-            const metadataJson = JSON.parse(metadataText);
-            console.log("📘 GetMetaDataInfo parsed JSON:", metadataJson);
-          } catch (e) {
-            console.warn("⚠️ GetMetaDataInfo not valid JSON", e);
-          }
-
-          const templateFields = templateJson?.Objects?.[0] || {};
-          const payloadObj = { ...templateFields };
-          payloadObj.__classname__ = "WWAsset";
-          payloadObj.Type = "Image";
-          payloadObj.ObjectType = "Image";
-          payloadObj.Name = `web_${original.Name}`;
-          payloadObj.TargetName = `web_${original.Name}`;
-          payloadObj.Dossier = { ID: dossier.ID };
-          payloadObj.UploadToken = UploadToken;
-          payloadObj.ContentPath = ContentPath;
-
-          if (!payloadObj.Format && original.Format) payloadObj.Format = original.Format;
-          if (!payloadObj.Category && original.Category) payloadObj.Category = original.Category;
-          if (!payloadObj.Publication && original.Publication) payloadObj.Publication = original.Publication;
-          if (!payloadObj.AssetInfo) payloadObj.AssetInfo = { OriginalFileName: original.Name };
-
-          const finalPayload = { Objects: [payloadObj] };
-          const payloadText = JSON.stringify(finalPayload, null, 2);
-          console.log("📨 Final CreateObjects full request:", payloadText);
-
-          // ✅ Blob-based payload download
-          const blobPayload = new Blob([payloadText], { type: "application/json" });
-          const url = URL.createObjectURL(blobPayload);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "payload.json";
-          a.style.display = "none";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          const payload = {
+            Objects: [
+              {
+                __classname__: "WWAsset",
+                Type: "Image",
+                Name: `web_${original.Name}`,
+                TargetName: `web_${original.Name}`,
+                Dossier: { ID: dossier.ID },
+                UploadToken,
+                ContentPath,
+                Format: original.Format,
+                Category: original.Category,
+                Publication: original.Publication,
+                AssetInfo: { OriginalFileName: original.Name }
+              }
+            ]
+          };
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
             headers,
-            body: payloadText
+            body: JSON.stringify(payload)
           });
 
           const rawCreateText = await createRes.text();
-          console.log("📥 CreateObjects raw response:", rawCreateText);
-
           if (!rawCreateText || rawCreateText.trim().length === 0) {
             throw new Error(`CreateObjects returned empty body. HTTP ${createRes.status} ${createRes.statusText}`);
           }
 
-          let createResult;
-          try {
-            createResult = JSON.parse(rawCreateText);
-            console.log("✅ Created object:", createResult);
-            ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
-          } catch (e) {
-            console.error("❌ CreateObjects response not valid JSON:", e);
-            ContentStationSdk.showNotification({ content: "❌ Failed to parse CreateObjects result. See console." });
-          }
+          const createResult = JSON.parse(rawCreateText);
+          console.log("✅ Created object:", createResult);
+          ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
+
         } catch (err) {
           console.error("❌ Error during duplication flow:", err);
           ContentStationSdk.showNotification({ content: "❌ Image duplication failed. Check console." });
@@ -166,4 +105,3 @@
     });
   });
 })();
-
