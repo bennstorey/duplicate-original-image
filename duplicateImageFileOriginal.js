@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C15 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C16 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -38,7 +38,7 @@
 
     diagnostics.forEach(({ method, label, payload }) => {
       const fullPayload = { ...(ticket ? { Ticket: ticket } : {}), ...(payload || {}) };
-      console.log(`📤 Sending ${label}:\`, fullPayload);
+      console.log(`📤 Sending ${label}:`, fullPayload);
 
       fetch(`${serverUrl}/index.php?protocol=JSON&method=${method}`, {
         method: "POST",
