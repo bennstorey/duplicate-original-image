@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C5 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C6 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -140,6 +140,10 @@
                 __classname__: "WWAsset",
                 Type: "Image",
                 Name: newName,
+                TargetName: newName,
+                AssetInfo: {
+                  OriginalFileName: originalName
+                },
                 Category: category,
                 Publication: publication,
                 Format: format,
