@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C18 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C19 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
