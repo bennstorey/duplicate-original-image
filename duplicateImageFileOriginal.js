@@ -1,7 +1,12 @@
 (function () {
-  console.log("✅ 2 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ A99 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
+
+  if (typeof ContentStationSdk.registerDossierToolbarButton !== "function") {
+    console.error("❌ ContentStationSdk.registerDossierToolbarButton is not available. Check SDK version or plugin scope.");
+    return;
+  }
 
   ContentStationSdk.registerDossierToolbarButton({
     id: "duplicate-original-image-button",
