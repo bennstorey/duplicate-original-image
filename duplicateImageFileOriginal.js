@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ C3 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ C4 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -118,6 +118,11 @@
             throw new Error("UploadFile did not return valid JSON");
           }
 
+          const { UploadToken, ContentPath } = uploadJson;
+          if (!UploadToken || !ContentPath) {
+            throw new Error("UploadFile missing UploadToken or ContentPath");
+          }
+
           const category = meta.Object.Category;
           const publication = meta.Object.Publication;
           const brand = meta.Object.Brand;
@@ -142,8 +147,8 @@
                 ...(brand ? { Brand: brand } : {}),
                 ...(workflow ? { WorkflowStatus: workflow } : {}),
                 Dossier: { ID: dossier.ID },
-                UploadToken: uploadJson.UploadToken,
-                ContentPath: uploadJson.ContentPath
+                UploadToken,
+                ContentPath
               }
             ]
           };
