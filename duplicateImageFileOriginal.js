@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B22 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B23 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -111,30 +111,9 @@
           const brand = meta.Object.Brand;
           const format = meta.Object.Format;
 
-          if (!category) {
-            console.error("❌ Missing Category in object metadata:", meta);
-            throw new Error("Missing Category in metadata for object ID: " + objectId);
-          }
-
-          if (!publication) {
-            console.error("❌ Missing Publication in object metadata:", meta);
-            throw new Error("Missing Publication in metadata for object ID: " + objectId);
-          }
-
-          if (!format) {
-            console.error("❌ Missing Format in metadata — required for ContentPath upload.", meta);
-            throw new Error("Missing Format in metadata for object ID: " + objectId);
-          }
-
-          if (!brand) {
-            console.warn("⚠️ Brand not found in metadata — proceeding without it.");
-          }
-
-          console.log("📁 Original Category:", category);
-          console.log("📰 Original Publication:", publication);
-          console.log("🏷️ Brand:", brand);
-          console.log("🧾 Format:", format);
-          console.log("📂 Upload Path:", uploadJson.Path);
+          if (!category) throw new Error("Missing Category in metadata for object ID: " + objectId);
+          if (!publication) throw new Error("Missing Publication in metadata for object ID: " + objectId);
+          if (!format) throw new Error("Missing Format in metadata for object ID: " + objectId);
 
           const payload = {
             ...(ticket ? { Ticket: ticket } : {}),
@@ -166,7 +145,7 @@
             body: JSON.stringify(payload)
           });
 
-          console.log("🔎 CreateObjects HTTP status:", createRes.status);
+          console.log("🔎 CreateObjects HTTP status:", createRes.status, createRes.statusText);
 
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response text:", rawCreateText);
