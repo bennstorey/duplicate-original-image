@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E4 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ E5 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
