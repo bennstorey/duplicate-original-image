@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ B19 Plugin: Duplicate Original Image - Dossier Button");
+  console.log("✅ B20 Plugin: Duplicate Original Image - Dossier Button");
 
   let sessionInfo = null;
 
@@ -142,6 +142,7 @@
               {
                 __classname__: "WWAsset",
                 Type: "Image",
+                ObjectType: "File",
                 Name: newName,
                 Category: category,
                 Publication: publication,
