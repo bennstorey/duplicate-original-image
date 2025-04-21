@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E29 Plugin: Duplicate Original Image - Clean Version with Diagnostics");
+  console.log("✅ E30 Plugin: Duplicate Original Image - Clean Version with Diagnostics + MetaDataInfo");
 
   let sessionInfo = null;
 
@@ -77,6 +77,21 @@
             templateJson = JSON.parse(templateRaw);
           } catch (e) {
             console.warn("⚠️ Failed to parse GetObjectTemplate JSON:", e);
+          }
+
+          // 📘 Diagnostic call: GetMetaDataInfo
+          const metaInfoRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ ObjectType: "Image" })
+          });
+          const metaInfoRaw = await metaInfoRes.text();
+          console.log("📘 GetMetaDataInfo raw response:", metaInfoRaw);
+          try {
+            const metaInfoJson = JSON.parse(metaInfoRaw);
+            console.log("📘 GetMetaDataInfo parsed:", metaInfoJson);
+          } catch (e) {
+            console.warn("⚠️ Failed to parse GetMetaDataInfo JSON:", e);
           }
 
           const payload = {
