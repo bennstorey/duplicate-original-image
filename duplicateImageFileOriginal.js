@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E43 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E44 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -60,11 +60,22 @@
             }
           };
 
-          const metaJson = await fetchAndParse(
-            `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
-            "GetObjectMetaData",
-            { ObjectId: objectId, ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) }
-          );
+          let metaJson = null;
+          try {
+            metaJson = await fetchAndParse(
+              `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
+              "GetObjectMetaData",
+              { ObjectId: objectId, ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) }
+            );
+          } catch (e) {
+            console.warn("⚠️ First GetObjectMetaData attempt failed, retrying once...");
+            await new Promise(r => setTimeout(r, 500));
+            metaJson = await fetchAndParse(
+              `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
+              "GetObjectMetaData (retry)",
+              { ObjectId: objectId, ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) }
+            );
+          }
 
           const templateJson = await fetchAndParse(
             `${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`,
@@ -72,7 +83,7 @@
             { Type: "Image", ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) }
           );
 
-          const original = metaJson?.Object;
+          const original = metaJson?.Object || selection?.[0] || {};
           const template = templateJson?.ObjectTemplate?.Objects?.[0] || {};
 
           console.log("📦 Original metadata:", original);
@@ -113,7 +124,7 @@
                 Dossier: { ID: dossier.ID },
                 UploadToken,
                 ContentPath,
-                Format: original.Format,
+                Format: original.Format || template.Format,
                 Category: original.Category || template.Category,
                 Publication: original.Publication || template.Publication,
                 Brand: original.Brand || template.Brand || '',
