@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E35 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E36 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -29,21 +29,35 @@
         try {
           const objectId = selection[0].ID;
 
-          const [metaRes, templateRes] = await Promise.all([
-            fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
+          const fetchAndParse = async (url, bodyLabel, body) => {
+            const res = await fetch(url, {
               method: "POST",
               headers,
-              body: JSON.stringify({ ObjectId: objectId })
-            }),
-            fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-              method: "POST",
-              headers,
-              body: JSON.stringify({ Type: "Image" })
-            })
-          ]);
+              body: JSON.stringify(body)
+            });
+            const raw = await res.text();
+            console.log(`📡 ${bodyLabel} raw response:`, raw);
+            if (!raw || raw.trim().length === 0) throw new Error(`${bodyLabel} returned empty body`);
+            try {
+              return JSON.parse(raw);
+            } catch (e) {
+              console.warn(`⚠️ ${bodyLabel} not valid JSON`, e);
+              throw e;
+            }
+          };
 
-          const metaJson = await metaRes.json();
-          const templateJson = await templateRes.json();
+          const metaJson = await fetchAndParse(
+            `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
+            "GetObjectMetaData",
+            { ObjectId: objectId }
+          );
+
+          const templateJson = await fetchAndParse(
+            `${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`,
+            "GetObjectTemplate",
+            { Type: "Image" }
+          );
+
           const original = metaJson?.Object;
           const template = templateJson?.ObjectTemplate?.Objects?.[0] || {};
 
@@ -71,7 +85,6 @@
 
           const rawUploadText = await uploadRes.text();
           console.log("📤 UploadFile raw text:", rawUploadText);
-
           const uploadJson = JSON.parse(rawUploadText);
           const { UploadToken, ContentPath } = uploadJson;
 
