@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E40 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E41 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -130,10 +130,24 @@
             headers,
             body: JSON.stringify(payload)
           });
+
           const validateText = await validateRes.text();
           console.log("📄 ValidateObjects response:", validateText);
-          if (!validateRes.ok || !validateText || validateText.includes("Error")) {
-            throw new Error("ValidateObjects failed. See console.");
+
+          let validateJson;
+          try {
+            validateJson = JSON.parse(validateText);
+          } catch (e) {
+            throw new Error("ValidateObjects did not return valid JSON");
+          }
+
+          const errors = validateJson?.Objects?.[0]?.Errors;
+          if (errors && errors.length > 0) {
+            console.warn("🚫 Validation errors:", errors);
+            ContentStationSdk.showNotification({
+              content: `❌ Validation failed: ${errors.map(e => e.ErrorDescription || e.Message || JSON.stringify(e)).join(", ")}`
+            });
+            return;
           }
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
