@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E36 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E37 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -27,14 +27,19 @@
       },
       onAction: async (button, selection, dossier) => {
         try {
-          const objectId = selection[0].ID;
+          const objectId = selection?.[0]?.ID;
+          if (!objectId) throw new Error("No object ID found in selection.");
+          console.log("📦 Selected object ID:", objectId);
 
           const fetchAndParse = async (url, bodyLabel, body) => {
+            console.log(`📤 Sending to ${bodyLabel}:`, JSON.stringify(body));
             const res = await fetch(url, {
               method: "POST",
               headers,
               body: JSON.stringify(body)
             });
+            console.log(`📡 ${bodyLabel} → HTTP`, res.status, res.statusText);
+            console.log(`📡 ${bodyLabel} headers:`, [...res.headers.entries()]);
             const raw = await res.text();
             console.log(`📡 ${bodyLabel} raw response:`, raw);
             if (!raw || raw.trim().length === 0) throw new Error(`${bodyLabel} returned empty body`);
