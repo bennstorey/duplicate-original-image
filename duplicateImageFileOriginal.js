@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E41 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E42 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -42,7 +42,7 @@
           console.log("🆔 Selected object ID:", objectId);
 
           const fetchAndParse = async (url, label, body) => {
-            console.log(`📤 Sending to ${label}:`, JSON.stringify(body));
+            console.log(`📤 Sending to ${label}:", JSON.stringify(body));
             const res = await fetch(url, {
               method: "POST",
               headers,
@@ -50,7 +50,7 @@
             });
             console.log(`📡 ${label} → HTTP`, res.status, res.statusText);
             const raw = await res.text();
-            console.log(`📡 ${label} raw response:`, raw);
+            console.log(`📡 ${label} raw response:", raw);
             if (!raw || raw.trim().length === 0) throw new Error(`${label} returned empty body`);
             try {
               return JSON.parse(raw);
@@ -150,6 +150,8 @@
             return;
           }
 
+          console.log("📨 Sending to CreateObjects:", JSON.stringify(payload, null, 2));
+
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
             headers,
@@ -157,11 +159,17 @@
           });
 
           const rawCreateText = await createRes.text();
-          console.log("📥 CreateObjects response:", rawCreateText);
+          console.log("📥 CreateObjects response text:", rawCreateText);
 
-          const createResult = JSON.parse(rawCreateText);
+          let createResult;
+          try {
+            createResult = JSON.parse(rawCreateText);
+          } catch (e) {
+            console.error("❌ CreateObjects response not valid JSON:", e);
+            throw new Error("CreateObjects did not return valid JSON");
+          }
+
           console.log("✅ Created object:", createResult);
-
           ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
 
         } catch (err) {
