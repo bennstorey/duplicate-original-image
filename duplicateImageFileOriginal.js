@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E31 Plugin: Duplicate Original Image - Clean Version with Diagnostics + MetaDataInfo");
+  console.log("✅ E32 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -57,43 +57,24 @@
             body: form
           });
 
+          console.log("📤 UploadFile HTTP status:", uploadRes.status, uploadRes.statusText);
+          console.log("📤 UploadFile response headers:", [...uploadRes.headers.entries()]);
+
           const rawUploadText = await uploadRes.text();
+          console.log("📤 UploadFile raw text:", rawUploadText);
           if (!rawUploadText || rawUploadText.trim().length === 0) {
             throw new Error("UploadFile returned empty body");
           }
 
-          const uploadJson = JSON.parse(rawUploadText);
+          let uploadJson;
+          try {
+            uploadJson = JSON.parse(rawUploadText);
+          } catch (e) {
+            console.warn("⚠️ UploadFile returned invalid JSON:", e);
+            throw new Error("UploadFile response was not valid JSON");
+          }
+
           const { UploadToken, ContentPath } = uploadJson;
-
-          // 🧱 Diagnostic call: GetObjectTemplate
-          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ Type: "Image" })
-          });
-          const templateRaw = await templateRes.text();
-          console.log("🧱 GetObjectTemplate raw response:", templateRaw);
-          let templateJson;
-          try {
-            templateJson = JSON.parse(templateRaw);
-          } catch (e) {
-            console.warn("⚠️ Failed to parse GetObjectTemplate JSON:", e);
-          }
-
-          // 📘 Diagnostic call: GetMetaDataInfo
-          const metaInfoRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetMetaDataInfo`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ ObjectType: "Image" })
-          });
-          const metaInfoRaw = await metaInfoRes.text();
-          console.log("📘 GetMetaDataInfo raw response:", metaInfoRaw);
-          try {
-            const metaInfoJson = JSON.parse(metaInfoRaw);
-            console.log("📘 GetMetaDataInfo parsed:", metaInfoJson);
-          } catch (e) {
-            console.warn("⚠️ Failed to parse GetMetaDataInfo JSON:", e);
-          }
 
           const payload = {
             Ticket: sessionInfo.ticket,
@@ -124,9 +105,12 @@
             body: JSON.stringify(payload)
           });
 
+          console.log("📬 CreateObjects status:", createRes.status, createRes.statusText);
           const rawCreateText = await createRes.text();
+          console.log("📥 CreateObjects response:", rawCreateText);
+
           if (!rawCreateText || rawCreateText.trim().length === 0) {
-            throw new Error(`CreateObjects returned empty body. HTTP ${createRes.status} ${createRes.statusText}`);
+            throw new Error(`CreateObjects returned empty body. HTTP ${createRes.status}`);
           }
 
           const createResult = JSON.parse(rawCreateText);
@@ -134,8 +118,8 @@
           ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
 
         } catch (err) {
-          console.error("❌ Error during duplication flow:", err);
-          ContentStationSdk.showNotification({ content: "❌ Image duplication failed. Check console." });
+          console.error("❌ Duplication flow failed:", err);
+          ContentStationSdk.showNotification({ content: "❌ Duplication failed. Check console." });
         }
       }
     });
