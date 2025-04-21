@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E32 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E33 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -37,6 +37,14 @@
           const metaJson = await metaRes.json();
           const original = metaJson?.Object;
           console.log("📦 Original metadata:", original);
+
+          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ Type: "Image" })
+          });
+          const templateJson = await templateRes.json();
+          console.log("🧱 Object Template (Image):", templateJson);
 
           const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
             method: "POST",
