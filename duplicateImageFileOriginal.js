@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E28 Plugin: Duplicate Original Image - Clean Version");
+  console.log("✅ E29 Plugin: Duplicate Original Image - Clean Version with Diagnostics");
 
   let sessionInfo = null;
 
@@ -64,6 +64,21 @@
           const uploadJson = JSON.parse(rawUploadText);
           const { UploadToken, ContentPath } = uploadJson;
 
+          // 🧱 Diagnostic call: GetObjectTemplate
+          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ Type: "Image" })
+          });
+          const templateRaw = await templateRes.text();
+          console.log("🧱 GetObjectTemplate raw response:", templateRaw);
+          let templateJson;
+          try {
+            templateJson = JSON.parse(templateRaw);
+          } catch (e) {
+            console.warn("⚠️ Failed to parse GetObjectTemplate JSON:", e);
+          }
+
           const payload = {
             Objects: [
               {
@@ -81,6 +96,8 @@
               }
             ]
           };
+
+          console.log("📨 Final CreateObjects payload:", JSON.stringify(payload, null, 2));
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
