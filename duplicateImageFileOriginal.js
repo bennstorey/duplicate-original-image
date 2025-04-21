@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E38 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E39 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
