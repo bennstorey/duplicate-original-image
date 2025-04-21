@@ -1,22 +1,24 @@
 (function () {
-  console.log("✅ E37 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E38 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
   ContentStationSdk.onSignin((info) => {
     console.log("🔑 Signin callback received:", info);
     sessionInfo = {
-      ticket: '',
+      ticket: info?.Ticket || '',
       studioServerUrl: info?.Url || `${location.origin}/server`
     };
 
-    console.warn("⚠️ Ticket not present — using cookie-based auth");
+    if (!sessionInfo.ticket) {
+      console.warn("⚠️ Ticket not present — using cookie-based auth");
+    }
     console.log("📡 Session Info:", sessionInfo);
 
     const serverUrl = sessionInfo.studioServerUrl;
     const headers = {
       "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest"
+      ...(sessionInfo.ticket ? {} : { "X-Requested-With": "XMLHttpRequest" })
     };
 
     ContentStationSdk.addDossierToolbarButton({
@@ -27,9 +29,17 @@
       },
       onAction: async (button, selection, dossier) => {
         try {
+          if (!sessionInfo || !sessionInfo.studioServerUrl) {
+            const fallback = ContentStationSdk.getInfo();
+            sessionInfo.studioServerUrl = fallback?.Url || `${location.origin}/server`;
+            sessionInfo.ticket = fallback?.Ticket || '';
+            console.log("🆗 Refetched session info:", sessionInfo);
+          }
+
+          console.log("📦 Selection:", selection);
           const objectId = selection?.[0]?.ID;
           if (!objectId) throw new Error("No object ID found in selection.");
-          console.log("📦 Selected object ID:", objectId);
+          console.log("🆔 Selected object ID:", objectId);
 
           const fetchAndParse = async (url, bodyLabel, body) => {
             console.log(`📤 Sending to ${bodyLabel}:`, JSON.stringify(body));
@@ -54,13 +64,13 @@
           const metaJson = await fetchAndParse(
             `${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`,
             "GetObjectMetaData",
-            { ObjectId: objectId }
+            { ObjectId: objectId, ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) }
           );
 
           const templateJson = await fetchAndParse(
             `${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`,
             "GetObjectTemplate",
-            { Type: "Image" }
+            { Type: "Image", ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) }
           );
 
           const original = metaJson?.Object;
@@ -72,7 +82,7 @@
           const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
             method: "POST",
             headers,
-            body: JSON.stringify({ ObjectId: objectId, Version: 1 })
+            body: JSON.stringify({ ObjectId: objectId, Version: 1, ...(sessionInfo.ticket ? { Ticket: sessionInfo.ticket } : {}) })
           });
           const buffer = await binaryRes.arrayBuffer();
           const blob = new Blob([buffer], { type: original.Format || 'application/octet-stream' });
@@ -92,9 +102,6 @@
           console.log("📤 UploadFile raw text:", rawUploadText);
           const uploadJson = JSON.parse(rawUploadText);
           const { UploadToken, ContentPath } = uploadJson;
-
-          console.log("📎 UploadToken:", UploadToken);
-          console.log("📎 ContentPath:", ContentPath);
 
           const payload = {
             Ticket: sessionInfo.ticket,
