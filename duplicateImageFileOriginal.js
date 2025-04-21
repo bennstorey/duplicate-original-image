@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E35 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -29,22 +29,26 @@
         try {
           const objectId = selection[0].ID;
 
-          const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ ObjectId: objectId })
-          });
-          const metaJson = await metaRes.json();
-          const original = metaJson?.Object;
-          console.log("📦 Original metadata:", original);
+          const [metaRes, templateRes] = await Promise.all([
+            fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({ ObjectId: objectId })
+            }),
+            fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({ Type: "Image" })
+            })
+          ]);
 
-          const templateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectTemplate`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ Type: "Image" })
-          });
+          const metaJson = await metaRes.json();
           const templateJson = await templateRes.json();
-          console.log("🧱 Object Template (Image):", templateJson);
+          const original = metaJson?.Object;
+          const template = templateJson?.ObjectTemplate?.Objects?.[0] || {};
+
+          console.log("📦 Original metadata:", original);
+          console.log("🧱 Template metadata:", template);
 
           const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
             method: "POST",
@@ -65,24 +69,14 @@
             body: form
           });
 
-          console.log("📤 UploadFile HTTP status:", uploadRes.status, uploadRes.statusText);
-          console.log("📤 UploadFile response headers:", [...uploadRes.headers.entries()]);
-
           const rawUploadText = await uploadRes.text();
           console.log("📤 UploadFile raw text:", rawUploadText);
-          if (!rawUploadText || rawUploadText.trim().length === 0) {
-            throw new Error("UploadFile returned empty body");
-          }
 
-          let uploadJson;
-          try {
-            uploadJson = JSON.parse(rawUploadText);
-          } catch (e) {
-            console.warn("⚠️ UploadFile returned invalid JSON:", e);
-            throw new Error("UploadFile response was not valid JSON");
-          }
-
+          const uploadJson = JSON.parse(rawUploadText);
           const { UploadToken, ContentPath } = uploadJson;
+
+          console.log("📎 UploadToken:", UploadToken);
+          console.log("📎 ContentPath:", ContentPath);
 
           const payload = {
             Ticket: sessionInfo.ticket,
@@ -96,10 +90,10 @@
                 UploadToken,
                 ContentPath,
                 Format: original.Format,
-                Category: original.Category,
-                Publication: original.Publication,
-                Brand: original.Brand || '',
-                WorkflowStatus: original.WorkflowStatus || '',
+                Category: original.Category || template.Category,
+                Publication: original.Publication || template.Publication,
+                Brand: original.Brand || template.Brand || '',
+                WorkflowStatus: original.WorkflowStatus || template.WorkflowStatus || '',
                 AssetInfo: { OriginalFileName: original.Name }
               }
             ]
@@ -113,16 +107,12 @@
             body: JSON.stringify(payload)
           });
 
-          console.log("📬 CreateObjects status:", createRes.status, createRes.statusText);
           const rawCreateText = await createRes.text();
           console.log("📥 CreateObjects response:", rawCreateText);
 
-          if (!rawCreateText || rawCreateText.trim().length === 0) {
-            throw new Error(`CreateObjects returned empty body. HTTP ${createRes.status}`);
-          }
-
           const createResult = JSON.parse(rawCreateText);
           console.log("✅ Created object:", createResult);
+
           ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
 
         } catch (err) {
