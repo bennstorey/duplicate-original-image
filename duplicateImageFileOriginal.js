@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E30 Plugin: Duplicate Original Image - Clean Version with Diagnostics + MetaDataInfo");
+  console.log("✅ E31 Plugin: Duplicate Original Image - Clean Version with Diagnostics + MetaDataInfo");
 
   let sessionInfo = null;
 
@@ -49,6 +49,7 @@
 
           const form = new FormData();
           form.append("File", file);
+          if (sessionInfo.ticket) form.append("Ticket", sessionInfo.ticket);
 
           const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
             method: "POST",
@@ -95,6 +96,7 @@
           }
 
           const payload = {
+            Ticket: sessionInfo.ticket,
             Objects: [
               {
                 __classname__: "WWAsset",
@@ -107,6 +109,8 @@
                 Format: original.Format,
                 Category: original.Category,
                 Publication: original.Publication,
+                Brand: original.Brand || '',
+                WorkflowStatus: original.WorkflowStatus || '',
                 AssetInfo: { OriginalFileName: original.Name }
               }
             ]
