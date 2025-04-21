@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E42 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E43 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -42,7 +42,7 @@
           console.log("🆔 Selected object ID:", objectId);
 
           const fetchAndParse = async (url, label, body) => {
-            console.log(`📤 Sending to ${label}:", JSON.stringify(body));
+            console.log(`📤 Sending to ${label}:`, JSON.stringify(body));
             const res = await fetch(url, {
               method: "POST",
               headers,
@@ -50,7 +50,7 @@
             });
             console.log(`📡 ${label} → HTTP`, res.status, res.statusText);
             const raw = await res.text();
-            console.log(`📡 ${label} raw response:", raw);
+            console.log(`📡 ${label} raw response:`, raw);
             if (!raw || raw.trim().length === 0) throw new Error(`${label} returned empty body`);
             try {
               return JSON.parse(raw);
