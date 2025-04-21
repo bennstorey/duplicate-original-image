@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E39 Plugin: Duplicate Original Image - Upload Debug Enhancements");
+  console.log("✅ E40 Plugin: Duplicate Original Image - Upload Debug Enhancements");
 
   let sessionInfo = null;
 
@@ -41,22 +41,21 @@
           if (!objectId) throw new Error("No object ID found in selection.");
           console.log("🆔 Selected object ID:", objectId);
 
-          const fetchAndParse = async (url, bodyLabel, body) => {
-            console.log(`📤 Sending to ${bodyLabel}:`, JSON.stringify(body));
+          const fetchAndParse = async (url, label, body) => {
+            console.log(`📤 Sending to ${label}:`, JSON.stringify(body));
             const res = await fetch(url, {
               method: "POST",
               headers,
               body: JSON.stringify(body)
             });
-            console.log(`📡 ${bodyLabel} → HTTP`, res.status, res.statusText);
-            console.log(`📡 ${bodyLabel} headers:`, [...res.headers.entries()]);
+            console.log(`📡 ${label} → HTTP`, res.status, res.statusText);
             const raw = await res.text();
-            console.log(`📡 ${bodyLabel} raw response:`, raw);
-            if (!raw || raw.trim().length === 0) throw new Error(`${bodyLabel} returned empty body`);
+            console.log(`📡 ${label} raw response:`, raw);
+            if (!raw || raw.trim().length === 0) throw new Error(`${label} returned empty body`);
             try {
               return JSON.parse(raw);
             } catch (e) {
-              console.warn(`⚠️ ${bodyLabel} not valid JSON`, e);
+              console.warn(`⚠️ ${label} not valid JSON`, e);
               throw e;
             }
           };
@@ -124,7 +123,18 @@
             ]
           };
 
-          console.log("📨 Final CreateObjects payload:", JSON.stringify(payload, null, 2));
+          console.log("🔍 Sending to ValidateObjects:", JSON.stringify(payload, null, 2));
+
+          const validateRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=ValidateObjects`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload)
+          });
+          const validateText = await validateRes.text();
+          console.log("📄 ValidateObjects response:", validateText);
+          if (!validateRes.ok || !validateText || validateText.includes("Error")) {
+            throw new Error("ValidateObjects failed. See console.");
+          }
 
           const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
             method: "POST",
