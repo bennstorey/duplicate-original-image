@@ -1,4 +1,4 @@
-// 1.0 Duplicate Image Plugin (Studio Web compatible for direct JS URL)
+// 1.1 Duplicate Image Plugin (Studio Web compatible for direct JS URL)
 
 console.log('[Duplicate Original Image Plugin] Initializing...');
 
@@ -95,4 +95,4 @@ registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }
   }
 });
 
-export default null;
+
