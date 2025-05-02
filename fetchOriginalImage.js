@@ -1,92 +1,102 @@
-//1.5 Duplicate Original Image Plugin (confirmed working pre-pause)
+//1.6 Duplicate Original Image Plugin (SDK-safe loading)
 
-console.log('[Duplicate Image Plugin] Registering plugin...');
+console.log('[Duplicate Image Plugin] Waiting for SDK...');
 
-const { registerPlugin } = window.ContentStationPluginSDK;
+document.addEventListener('DOMContentLoaded', () => {
+  const interval = setInterval(() => {
+    const sdk = window.ContentStationPluginSDK;
+    if (sdk && typeof sdk.registerPlugin === 'function') {
+      clearInterval(interval);
 
-registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }) => {
-  console.log('[Duplicate Image Plugin] Plugin activated.');
+      console.log('[Duplicate Image Plugin] SDK available, registering plugin...');
+      const { registerPlugin } = sdk;
 
-  if (!selectedObjects || selectedObjects.length !== 1) {
-    alert('Please select exactly one image.');
-    console.warn('[Duplicate Image Plugin] Invalid selection:', selectedObjects);
-    return;
-  }
+      registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }) => {
+        console.log('[Duplicate Image Plugin] Plugin activated.');
 
-  const objectId = selectedObjects[0].Id;
-  console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
-
-  try {
-    const metaRes = await fetch('/server/Plugin/Api/Rest/GetObjectMetaData', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Id: objectId })
-    });
-    const meta = await metaRes.json();
-    console.log('[Duplicate Image Plugin] Original object metadata:', meta);
-
-    const basic = meta.MetaData.BasicMetaData;
-    const content = meta.MetaData.ContentMetaData;
-
-    const binRes = await fetch('/server/Plugin/Api/Rest/GetObjectBinary', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Id: objectId, Version: 1 })
-    });
-    const blob = await binRes.blob();
-
-    const formData = new FormData();
-    formData.append('file', blob, `web_${basic.Name}`);
-
-    const uploadRes = await fetch('/server/Plugin/Api/Rest/UploadFile', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData
-    });
-    const uploadJson = await uploadRes.json();
-    console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
-
-    const payload = {
-      Lock: true,
-      Objects: [
-        {
-          __classname__: 'WWAsset',
-          MetaData: {
-            BasicMetaData: {
-              Name: `web_${basic.Name}`,
-              Type: 'Image',
-              Publication: { Id: basic.Publication.Id },
-              Category: { Id: basic.Category.Id }
-            },
-            ContentMetaData: {
-              Format: content.Format,
-              Width: content.Width,
-              Height: content.Height,
-              Dpi: content.Dpi,
-              ColorSpace: content.ColorSpace,
-              HighResFile: uploadJson.ContentPath
-            }
-          }
+        if (!selectedObjects || selectedObjects.length !== 1) {
+          alert('Please select exactly one image.');
+          console.warn('[Duplicate Image Plugin] Invalid selection:', selectedObjects);
+          return;
         }
-      ]
-    };
 
-    console.log('[Duplicate Image Plugin] CreateObjects payload:', payload);
+        const objectId = selectedObjects[0].Id;
+        console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
 
-    const createRes = await fetch('/server/Plugin/Api/Rest/CreateObjects', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+        try {
+          const metaRes = await fetch('/server/Plugin/Api/Rest/GetObjectMetaData', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Id: objectId })
+          });
+          const meta = await metaRes.json();
+          console.log('[Duplicate Image Plugin] Original object metadata:', meta);
 
-    const createJson = await createRes.json();
-    console.log('[Duplicate Image Plugin] CreateObjects response:', createJson);
-    alert('Image duplicated successfully.');
-  } catch (err) {
-    console.error('[Duplicate Image Plugin] Error duplicating image:', err);
-    alert('Failed to duplicate image. Check console for details.');
-  }
+          const basic = meta.MetaData.BasicMetaData;
+          const content = meta.MetaData.ContentMetaData;
+
+          const binRes = await fetch('/server/Plugin/Api/Rest/GetObjectBinary', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Id: objectId, Version: 1 })
+          });
+          const blob = await binRes.blob();
+
+          const formData = new FormData();
+          formData.append('file', blob, `web_${basic.Name}`);
+
+          const uploadRes = await fetch('/server/Plugin/Api/Rest/UploadFile', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+          });
+          const uploadJson = await uploadRes.json();
+          console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
+
+          const payload = {
+            Lock: true,
+            Objects: [
+              {
+                __classname__: 'WWAsset',
+                MetaData: {
+                  BasicMetaData: {
+                    Name: `web_${basic.Name}`,
+                    Type: 'Image',
+                    Publication: { Id: basic.Publication.Id },
+                    Category: { Id: basic.Category.Id }
+                  },
+                  ContentMetaData: {
+                    Format: content.Format,
+                    Width: content.Width,
+                    Height: content.Height,
+                    Dpi: content.Dpi,
+                    ColorSpace: content.ColorSpace,
+                    HighResFile: uploadJson.ContentPath
+                  }
+                }
+              }
+            ]
+          };
+
+          console.log('[Duplicate Image Plugin] CreateObjects payload:', payload);
+
+          const createRes = await fetch('/server/Plugin/Api/Rest/CreateObjects', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const createJson = await createRes.json();
+          console.log('[Duplicate Image Plugin] CreateObjects response:', createJson);
+          alert('Image duplicated successfully.');
+        } catch (err) {
+          console.error('[Duplicate Image Plugin] Error duplicating image:', err);
+          alert('Failed to duplicate image. Check console for details.');
+        }
+      });
+    }
+  }, 100);
 });
