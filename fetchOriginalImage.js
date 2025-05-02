@@ -8,8 +8,11 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
     return;
   }
 
+  let studioServerUrl = '';
+
   ContentStationSdk.onSignin((info) => {
     console.log('[Duplicate Image Plugin] onSignin:', info);
+    studioServerUrl = info?.ServerInfo?.Url || `${window.location.origin}/server`;
   });
 
   ContentStationSdk.addDossierToolbarButton({
@@ -30,7 +33,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
 
       try {
-        const metaRes = await fetch('/server/Plugin/Api/Rest/GetObjectMetaData', {
+        const metaRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/GetObjectMetaData`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -42,7 +45,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const basic = meta.MetaData.BasicMetaData;
         const content = meta.MetaData.ContentMetaData;
 
-        const binRes = await fetch('/server/Plugin/Api/Rest/GetObjectBinary', {
+        const binRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/GetObjectBinary`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -53,7 +56,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const formData = new FormData();
         formData.append('file', blob, `web_${basic.Name}`);
 
-        const uploadRes = await fetch('/server/Plugin/Api/Rest/UploadFile', {
+        const uploadRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/UploadFile`, {
           method: 'POST',
           credentials: 'include',
           body: formData
@@ -88,7 +91,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         console.log('[Duplicate Image Plugin] CreateObjects payload:', payload);
 
-        const createRes = await fetch('/server/Plugin/Api/Rest/CreateObjects', {
+        const createRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/CreateObjects`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
