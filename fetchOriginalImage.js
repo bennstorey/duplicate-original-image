@@ -1,6 +1,6 @@
-// Duplicate Image Plugin (patched for valid CreateObjects payload)
+// Duplicate Image Plugin (Studio Web compatible for direct JS URL)
 
-import { registerPlugin } from 'ContentStationPluginSDK';
+const { registerPlugin } = window.ContentStationPluginSDK;
 
 registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }) => {
   if (!selectedObjects || selectedObjects.length !== 1) {
@@ -90,3 +90,5 @@ registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }
     alert('Failed to duplicate image. Check console for details.');
   }
 });
+
+export default null;
