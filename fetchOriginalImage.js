@@ -1,18 +1,23 @@
-// Duplicate Image Plugin (Studio Web compatible for direct JS URL)
+// 1.0 Duplicate Image Plugin (Studio Web compatible for direct JS URL)
+
+console.log('[Duplicate Original Image Plugin] Initializing...');
 
 const { registerPlugin } = window.ContentStationPluginSDK;
 
 registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }) => {
+  console.log('[Duplicate Original Image Plugin] Plugin activated.');
+
   if (!selectedObjects || selectedObjects.length !== 1) {
     alert('Please select exactly one image.');
+    console.warn('[Duplicate Original Image Plugin] Invalid selection:', selectedObjects);
     return;
   }
 
   const objectId = selectedObjects[0].Id;
-  console.log('Selected object ID:', objectId);
+  console.log('[Duplicate Original Image Plugin] Selected object ID:', objectId);
 
   try {
-    // Fetch original metadata
+    console.log('[Duplicate Original Image Plugin] Fetching metadata...');
     const metaRes = await fetch('/server/Plugin/Api/Rest/GetObjectMetaData', {
       method: 'POST',
       credentials: 'include',
@@ -20,12 +25,12 @@ registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }
       body: JSON.stringify({ Id: objectId })
     });
     const meta = await metaRes.json();
-    console.log('Original object metadata:', meta);
+    console.log('[Duplicate Original Image Plugin] Original object metadata:', meta);
 
     const basic = meta.MetaData.BasicMetaData;
     const content = meta.MetaData.ContentMetaData;
 
-    // Download binary of version 1
+    console.log('[Duplicate Original Image Plugin] Downloading binary for version 1...');
     const binRes = await fetch(`/server/Plugin/Api/Rest/GetObjectBinary`, {
       method: 'POST',
       credentials: 'include',
@@ -33,20 +38,20 @@ registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }
       body: JSON.stringify({ Id: objectId, Version: 1 })
     });
     const blob = await binRes.blob();
+    console.log('[Duplicate Original Image Plugin] Binary download complete.');
 
-    // Upload file
     const formData = new FormData();
     formData.append('file', blob, `web_${basic.Name}`);
 
+    console.log('[Duplicate Original Image Plugin] Uploading file...');
     const uploadRes = await fetch('/server/Plugin/Api/Rest/UploadFile', {
       method: 'POST',
       credentials: 'include',
       body: formData
     });
     const uploadJson = await uploadRes.json();
-    console.log('UploadFile response:', uploadJson);
+    console.log('[Duplicate Original Image Plugin] UploadFile response:', uploadJson);
 
-    // Build CreateObjects payload
     const payload = {
       Lock: true,
       Objects: [
@@ -65,16 +70,15 @@ registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }
               Height: content.Height,
               Dpi: content.Dpi,
               ColorSpace: content.ColorSpace,
-              HighResFile: uploadJson.ContentPath // or UploadToken: uploadJson.UploadToken
+              HighResFile: uploadJson.ContentPath
             }
           }
         }
       ]
     };
 
-    console.log('CreateObjects payload:', payload);
+    console.log('[Duplicate Original Image Plugin] CreateObjects payload:', payload);
 
-    // Call CreateObjects
     const createRes = await fetch('/server/Plugin/Api/Rest/CreateObjects', {
       method: 'POST',
       credentials: 'include',
@@ -83,10 +87,10 @@ registerPlugin('Duplicate Original Image', async ({ pluginApi, selectedObjects }
     });
 
     const createJson = await createRes.json();
-    console.log('CreateObjects response:', createJson);
+    console.log('[Duplicate Original Image Plugin] CreateObjects response:', createJson);
     alert('Image duplicated successfully.');
   } catch (err) {
-    console.error('Error duplicating image:', err);
+    console.error('[Duplicate Original Image Plugin] Error duplicating image:', err);
     alert('Failed to duplicate image. Check console for details.');
   }
 });
