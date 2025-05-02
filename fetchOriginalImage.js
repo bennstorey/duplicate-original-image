@@ -1,4 +1,4 @@
-//1.9 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
+//2.0 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
