@@ -1,4 +1,4 @@
-// 1.4 Duplicate Original Image Plugin (confirmed working structure)
+//1.5 Duplicate Original Image Plugin (confirmed working pre-pause)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
