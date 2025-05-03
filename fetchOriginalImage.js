@@ -1,4 +1,4 @@
-//1.5 Duplicate Original Image Plugin using CopyObject with fallback to CreateObjects with re-upload
+// 1.6 Duplicate Original Image Plugin using CopyObject with fallback to CreateObjects with re-upload
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -150,9 +150,15 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
                 Publication: basic.Publication,
                 Brand: basic.Brand,
                 Dossier: { Id: dossierId },
+                Format: basic.Format,
                 ContentMetaData: {
                   ContentPath,
                   UploadToken
+                },
+                BasicMetaData: {
+                  Type: 'Image',
+                  Publication: basic.Publication,
+                  Category: basic.Category
                 }
               }
             ]
