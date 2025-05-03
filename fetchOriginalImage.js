@@ -1,4 +1,4 @@
-//1.3 Duplicate Original Image Plugin using CopyObject with fallback and validation
+//1.4 Duplicate Original Image Plugin using CopyObject with fallback and validation
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -65,7 +65,8 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
             SourceObjectId: objectId,
             NewName: newName,
             Dossier_Id: dossierId,
-            PreserveVersions: true
+            PreserveVersions: true,
+            MetaData: meta.MetaData
           },
           id: 2,
           jsonrpc: '2.0'
