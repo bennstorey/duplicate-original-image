@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaData for Studio Cloud
 
-console.log('//4.5 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaData for Studio Cloud');
+console.log('// 4.6 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaData for Studio Cloud');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -59,7 +59,24 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           return;
         }
 
-        const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}`;
+        // Fetch config info to map Publication name to valid ID
+        const configRes = await fetch('/server/GetConfigInfo', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const config = await configRes.json();
+        const publications = config?.Publication || [];
+        console.log('[Diagnostic] Publications from GetConfigInfo:', publications);
+
+        let publicationId = basic.Publication;
+        const match = publications.find(pub => pub.Name === basic.Publication);
+        if (match) {
+          publicationId = match.Id;
+        }
+
+        const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}\nResolved Publication ID: ${publicationId}`;
         alert(alertText);
 
         const newName = `web_${basic.Name}`;
@@ -73,7 +90,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
               BasicMetaData: {
                 Name: newName,
                 Type: 'Image',
-                Publication: basic.Publication,
+                Publication: publicationId,
                 Category: basic.Category
               }
             }
@@ -131,7 +148,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
               ObjectType: 'Image',
               Name: newName,
               Category: basic.Category,
-              Publication: basic.Publication,
+              Publication: publicationId,
               Brand: basic.Brand,
               Dossier: { Id: dossierId },
               Format: basic.Format,
@@ -141,7 +158,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
               },
               BasicMetaData: {
                 Type: 'Image',
-                Publication: basic.Publication,
+                Publication: publicationId,
                 Category: basic.Category
               }
             }
