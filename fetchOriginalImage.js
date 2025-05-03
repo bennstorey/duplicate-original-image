@@ -1,4 +1,4 @@
-//2.0 Duplicate Original Image Plugin using CopyObject with minimal payload
+//3.0 Duplicate Original Image Plugin using CopyObject with diagnostic GetObjectTemplate for CopyTo
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -38,6 +38,13 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       try {
         const dossierId = dossier?.Id || dossier?.id;
 
+        // Diagnostic: Fetch CopyTo template
+        const diagTemplate = await ContentStationSdk.callServerMethod('GetObjectTemplate', {
+          Operation: 'CopyTo',
+          ObjectType: 'Image'
+        });
+        console.log('[Duplicate Image Plugin] GetObjectTemplate (CopyTo) response:', diagTemplate);
+
         // Step 1: Fetch metadata
         const meta = await ContentStationSdk.callServerMethod('GetObjectMetaData', {
           Id: objectId
@@ -47,7 +54,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const basic = meta.MetaData.BasicMetaData;
         const newName = `web_${basic.Name}`;
 
-        // Step 2: Attempt CopyObject with minimal required fields
+        // Step 2: Attempt CopyObject with required fields from template
         const copyPayload = {
           SourceID: objectId,
           Targets: [
