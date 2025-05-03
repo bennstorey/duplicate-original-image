@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard
 
-console.log('// 4.1 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
+console.log('// 4.2 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -41,22 +41,28 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const dossierId = dossier?.Id || dossier?.id;
 
         // Diagnostic: Fetch CopyTo template
-        const diagTemplate = await ContentStationSdk.callServerMethodUsingCookieAuth('GetObjectTemplate', {
-          Operation: 'CopyTo',
-          ObjectType: 'Image'
+        const templateRes = await fetch('/server/GetObjectTemplate', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Operation: 'CopyTo', ObjectType: 'Image' })
         });
+        const diagTemplate = await templateRes.json();
         console.log('[Duplicate Image Plugin] GetObjectTemplate (CopyTo) response:', diagTemplate);
 
         // Step 1: Fetch metadata
-        const meta = await ContentStationSdk.callServerMethodUsingCookieAuth('GetObjectMetaData', {
-          Id: objectId
+        const metaRes = await fetch('/server/GetObjectMetaData', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Id: objectId })
         });
+        const meta = await metaRes.json();
         console.log('[Duplicate Image Plugin] Original object metadata:', meta);
 
         const basic = meta.MetaData.BasicMetaData;
         const masterId = basic?.MasterId || '[none]';
 
-        // Sanity guard: Ensure selected name matches metadata name
         if (!basic?.Name || basic.Name !== selected.Name) {
           alert(`Mismatch between selected name and metadata name:\nSelected: ${selected.Name}\nMeta: ${basic.Name}`);
           console.warn('[Duplicate Image Plugin] Name mismatch between selection and metadata.', { selected, basic });
@@ -64,11 +70,11 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         }
 
         const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}`;
-        alert(alertText); // Diagnostic alert
+        alert(alertText);
 
         const newName = `web_${basic.Name}`;
 
-        // Step 2: Attempt CopyObject with required fields from template
+        // Step 2: Attempt CopyObject
         const copyPayload = {
           SourceID: objectId,
           Targets: [
@@ -85,7 +91,14 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         };
 
         console.log('[Diagnostic] Payload to CopyObject:', JSON.stringify(copyPayload, null, 2));
-        const copyRes = await ContentStationSdk.callServerMethodUsingCookieAuth('CopyObject', copyPayload);
+
+        const copyResRaw = await fetch('/server/CopyObject', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(copyPayload)
+        });
+        const copyRes = await copyResRaw.json();
         console.log('[Duplicate Image Plugin] CopyObject response:', copyRes);
 
         if (Array.isArray(copyRes?.Ids) && copyRes.Ids.length > 0) {
@@ -97,23 +110,24 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         console.warn('[Duplicate Image Plugin] CopyObject failed, falling back to CreateObjects.');
 
         // Step 3: Fetch version 1 binary
-        const binaryBlob = await ContentStationSdk.callServerMethodUsingCookieAuth('GetObjectBinary', {
-          Id: objectId,
-          Version: 1,
-          Format: 'blob'
+        const binaryRes = await fetch('/server/GetObjectBinary', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ Id: objectId, Version: 1, Format: 'blob' })
         });
+        const binaryBlob = await binaryRes.blob();
 
         // Step 4: Upload binary
         const formData = new FormData();
         const fileName = `${newName}.${basic.Extension || 'jpg'}`;
         formData.append('file', binaryBlob, fileName);
 
-        const uploadRes = await fetch(`/upload/UploadFile`, {
+        const uploadRes = await fetch('/upload/UploadFile', {
           method: 'POST',
           credentials: 'include',
           body: formData
         });
-
         const uploadJson = await uploadRes.json();
         console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
 
