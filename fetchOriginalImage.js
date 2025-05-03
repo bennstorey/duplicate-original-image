@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with Studio Cloud-compatible endpoints + diagnostics
 
-console.log('//5.4 Duplicate Original Image Plugin vCLOUD_FINAL_FIX');
+console.log('//5.5 Duplicate Original Image Plugin vCLOUD_FINAL_FIX');
 
 (function () {
   if (!window.ContentStationSdk) {
@@ -56,7 +56,7 @@ console.log('//5.4 Duplicate Original Image Plugin vCLOUD_FINAL_FIX');
           }
         };
 
-        const meta = await post('GetObjectMetaData', { ID: objectId });
+        const meta = await post('GetObjectMetaData', { Id: objectId });
         const basic = meta?.MetaData?.BasicMetaData;
 
         if (!basic || !basic.Name) {
