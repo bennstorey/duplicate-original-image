@@ -1,4 +1,4 @@
-//1.9 Duplicate Original Image Plugin using CopyObject with minimal payload
+//2.0 Duplicate Original Image Plugin using CopyObject with minimal payload
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
