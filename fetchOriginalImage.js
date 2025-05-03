@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard
 
-console.log('// 4.7 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard');
+console.log('//4.8 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -58,7 +58,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           return;
         }
 
-        // Validate allowed values for Image
         const metaInfoRes = await fetch('/server/GetMetaDataInfo', {
           method: 'POST',
           credentials: 'include',
@@ -68,7 +67,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const metaInfo = await metaInfoRes.json();
         console.log('[Diagnostic] GetMetaDataInfo for Image:', metaInfo);
 
-        // Fetch Publication IDs from GetConfigInfo
         const configRes = await fetch('/server/GetConfigInfo', {
           method: 'POST',
           credentials: 'include',
@@ -90,17 +88,18 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         const newName = `web_${basic.Name}`;
 
+        const originalBasic = meta.MetaData.BasicMetaData;
+        const clonedBasicMeta = { ...originalBasic, Name: newName };
+        delete clonedBasicMeta.Id;
+        delete clonedBasicMeta.Version;
+        delete clonedBasicMeta.MasterId;
+
         const copyPayload = {
           SourceID: objectId,
           Targets: [
             {
               Dossier: { Id: dossierId },
-              BasicMetaData: {
-                Name: newName,
-                Type: 'Image',
-                Publication: publicationId,
-                Category: basic.Category
-              }
+              BasicMetaData: clonedBasicMeta
             }
           ]
         };
