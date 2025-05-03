@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard
 
-console.log('//4.8 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard');
+console.log('// 5.0 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -75,15 +75,31 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         });
         const config = await configRes.json();
         const publications = config?.Publication || [];
-        console.log('[Diagnostic] Publications from GetConfigInfo:', publications);
+        const brands = config?.Brand || [];
+        const categories = config?.Category || [];
+        console.log('[Diagnostic] Publications:', publications);
+        console.log('[Diagnostic] Brands:', brands);
+        console.log('[Diagnostic] Categories:', categories);
 
         let publicationId = basic.Publication;
-        const match = publications.find(pub => pub.Name === basic.Publication);
-        if (match) {
-          publicationId = match.Id;
+        const pubMatch = publications.find(pub => pub.Name === basic.Publication);
+        if (pubMatch) {
+          publicationId = pubMatch.Id;
         }
 
-        const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}\nResolved Publication ID: ${publicationId}`;
+        let brandId = basic.Brand;
+        const brandMatch = brands.find(b => b.Name === basic.Brand);
+        if (brandMatch) {
+          brandId = brandMatch.Id;
+        }
+
+        let categoryId = basic.Category;
+        const catMatch = categories.find(c => c.Name === basic.Category);
+        if (catMatch) {
+          categoryId = catMatch.Id;
+        }
+
+        const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}\nPublication ID: ${publicationId}\nBrand ID: ${brandId}\nCategory ID: ${categoryId}`;
         alert(alertText);
 
         const newName = `web_${basic.Name}`;
@@ -151,9 +167,9 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
               __classname__: 'WWAsset',
               ObjectType: 'Image',
               Name: newName,
-              Category: basic.Category,
+              Category: categoryId,
               Publication: publicationId,
-              Brand: basic.Brand,
+              Brand: brandId,
               Dossier: { Id: dossierId },
               Format: basic.Format,
               ContentMetaData: {
@@ -163,7 +179,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
               BasicMetaData: {
                 Type: 'Image',
                 Publication: publicationId,
-                Category: basic.Category
+                Category: categoryId
               }
             }
           ]
