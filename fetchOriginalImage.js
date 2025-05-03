@@ -1,4 +1,4 @@
-//1.8 Duplicate Original Image Plugin using CopyObject with fallback to CreateObjects with re-upload
+//1.9 Duplicate Original Image Plugin using CopyObject with minimal payload
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -47,10 +47,9 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const basic = meta.MetaData.BasicMetaData;
         const newName = `web_${basic.Name}`;
 
-        // Step 2: Attempt CopyObject
+        // Step 2: Attempt CopyObject with minimal required fields
         const copyPayload = {
           SourceID: objectId,
-          MetaData: meta.MetaData,
           Targets: [
             {
               Dossier: { Id: dossierId },
