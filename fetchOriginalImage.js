@@ -1,4 +1,4 @@
-//1.2 Duplicate Original Image Plugin using CopyObject with fallback and validation
+//1.3 Duplicate Original Image Plugin using CopyObject with fallback and validation
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
