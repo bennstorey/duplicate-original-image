@@ -1,4 +1,4 @@
-//2.2 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
+//2.3 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -85,6 +85,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           method: 'CreateObjects',
           params: {
             Lock: true,
+            SaveFormattedContent: true,
             Objects: [
               {
                 __classname__: 'WWAsset',
@@ -93,8 +94,10 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
                     Name: `web_${basic.Name}`,
                     Type: 'Image',
                     ObjectType: 'Image',
+                    Format: content.Format,
                     Publication: { Id: basic.Publication.Id },
                     Category: { Id: basic.Category.Id },
+                    WorkflowStatus: { Id: basic.WorkflowStatus?.Id || 'WIP' },
                     ...(basic.Brand?.Id ? { Brand: { Id: basic.Brand.Id } } : {})
                   },
                   ContentMetaData: {
@@ -124,7 +127,13 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         const createJson = await createRes.json();
         console.log('[Duplicate Image Plugin] CreateObjects response:', createJson);
-        alert('Image duplicated successfully.');
+
+        if (createJson?.result?.Objects?.length > 0) {
+          alert('Image duplicated successfully.');
+        } else {
+          console.error('[Duplicate Image Plugin] Unexpected CreateObjects response:', createJson);
+          alert('Failed to duplicate image. No objects returned.');
+        }
       } catch (err) {
         console.error('[Duplicate Image Plugin] Error duplicating image:', err);
         alert('Failed to duplicate image. Check console for details.');
