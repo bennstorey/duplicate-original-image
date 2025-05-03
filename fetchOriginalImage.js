@@ -1,6 +1,6 @@
-// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaData for Studio Cloud
+// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard
 
-console.log('// 4.6 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaData for Studio Cloud');
+console.log('// 4.7 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -40,7 +40,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       try {
         const dossierId = dossier?.Id || dossier?.id;
 
-        // Step 1: Fetch metadata using GetObjectMetaData (Cloud-compatible)
         const metaRes = await fetch('/server/GetObjectMetaData', {
           method: 'POST',
           credentials: 'include',
@@ -59,7 +58,17 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           return;
         }
 
-        // Fetch config info to map Publication name to valid ID
+        // Validate allowed values for Image
+        const metaInfoRes = await fetch('/server/GetMetaDataInfo', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ObjectType: 'Image' })
+        });
+        const metaInfo = await metaInfoRes.json();
+        console.log('[Diagnostic] GetMetaDataInfo for Image:', metaInfo);
+
+        // Fetch Publication IDs from GetConfigInfo
         const configRes = await fetch('/server/GetConfigInfo', {
           method: 'POST',
           credentials: 'include',
@@ -81,7 +90,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         const newName = `web_${basic.Name}`;
 
-        // Step 2: Attempt CopyObject
         const copyPayload = {
           SourceID: objectId,
           Targets: [
@@ -116,7 +124,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         console.warn('[Duplicate Image Plugin] CopyObject failed, falling back to CreateObjects.');
 
-        // Step 3: Fetch version 1 binary
         const binaryRes = await fetch('/server/GetObjectBinary', {
           method: 'POST',
           credentials: 'include',
@@ -125,7 +132,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         });
         const binaryBlob = await binaryRes.blob();
 
-        // Step 4: Upload binary
         const formData = new FormData();
         const fileName = `${newName}.${basic.Extension || 'jpg'}`;
         formData.append('file', binaryBlob, fileName);
@@ -140,7 +146,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         const { UploadToken, ContentPath } = uploadJson.result;
 
-        // Step 5: Create new object
         const createPayload = {
           Objects: [
             {
