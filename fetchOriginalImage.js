@@ -1,4 +1,4 @@
-//1.4 Duplicate Original Image Plugin using CopyObject with fallback and validation
+//1.5 Duplicate Original Image Plugin using CopyObject with fallback to CreateObjects with re-upload
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -39,7 +39,9 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       }
 
       try {
-        // Fetch metadata
+        const dossierId = dossier?.Id || dossier?.id;
+
+        // Step 1: Fetch metadata
         const metaRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
@@ -56,17 +58,24 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         const basic = meta.MetaData.BasicMetaData;
         const newName = `web_${basic.Name}`;
-        const dossierId = dossier?.Id || dossier?.id;
 
-        // Attempt CopyObject first
+        // Step 2: Attempt CopyObject
         const copyPayload = {
           method: 'CopyObject',
           params: {
-            SourceObjectId: objectId,
-            NewName: newName,
-            Dossier_Id: dossierId,
-            PreserveVersions: true,
-            MetaData: meta.MetaData
+            SourceID: objectId,
+            MetaData: meta.MetaData,
+            Targets: [
+              {
+                Dossier: { Id: dossierId },
+                BasicMetaData: {
+                  Name: newName,
+                  Type: 'Image',
+                  Publication: basic.Publication,
+                  Category: basic.Category
+                }
+              }
+            ]
           },
           id: 2,
           jsonrpc: '2.0'
@@ -92,17 +101,44 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           console.error('[Duplicate Image Plugin] Failed to parse CopyObject JSON:', err);
         }
 
-        if (copyJson?.result?.Id) {
+        if (copyJson?.result?.Id || copyJson?.result?.Ids?.length) {
           alert('Image duplicated successfully.');
           return;
         }
 
-        console.warn('[Duplicate Image Plugin] CopyObject failed or was not allowed, falling back to CreateObjects.');
+        console.warn('[Duplicate Image Plugin] CopyObject failed, falling back to CreateObjects.');
 
-        // Fallback to CreateObjects
-        const uploadToken = basic.UploadToken || '';
+        // Step 3: Fetch version 1 binary
+        const binaryRes = await fetch(`${studioServerUrl}/json`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'GetObjectBinary',
+            params: { Id: objectId, Version: 1 },
+            id: 4,
+            jsonrpc: '2.0'
+          })
+        });
+        const binaryBlob = await binaryRes.blob();
 
-        const fallbackPayload = {
+        // Step 4: Upload binary
+        const formData = new FormData();
+        formData.append('file', binaryBlob, `${newName}.${basic.Extension || 'jpg'}`);
+
+        const uploadRes = await fetch(`${studioServerUrl}/upload/UploadFile`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+
+        const uploadJson = await uploadRes.json();
+        console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
+
+        const { UploadToken, ContentPath } = uploadJson.result;
+
+        // Step 5: Create new object
+        const createPayload = {
           method: 'CreateObjects',
           params: {
             Objects: [
@@ -115,23 +151,23 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
                 Brand: basic.Brand,
                 Dossier: { Id: dossierId },
                 ContentMetaData: {
-                  ContentPath: basic.ContentPath,
-                  UploadToken: uploadToken
+                  ContentPath,
+                  UploadToken
                 }
               }
             ]
           },
-          id: 3,
+          id: 5,
           jsonrpc: '2.0'
         };
 
-        console.log('[Duplicate Image Plugin] CreateObjects payload:', fallbackPayload);
+        console.log('[Duplicate Image Plugin] CreateObjects payload:', createPayload);
 
         const createRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fallbackPayload)
+          body: JSON.stringify(createPayload)
         });
 
         const rawCreateText = await createRes.text();
