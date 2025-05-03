@@ -1,4 +1,4 @@
-//2.6 Duplicate Original Image Plugin (Dossier Toolbar Button Version with Full Diagnostics)
+// 1.0 Duplicate Original Image Plugin using CopyObject
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -55,153 +55,44 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         console.log('[Duplicate Image Plugin] Original object metadata:', meta);
 
         const basic = meta.MetaData.BasicMetaData;
-        const content = meta.MetaData.ContentMetaData;
 
-        // Fetch version 1 binary
-        const binRes = await fetch(`${studioServerUrl}/json`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: 'GetObjectBinary',
-            params: { Id: objectId, Version: 1 },
-            id: 2,
-            jsonrpc: '2.0'
-          })
-        });
-        const blob = await binRes.blob();
-
-        const formData = new FormData();
-        formData.append('file', blob, `web_${basic.Name}`);
-
-        const uploadRes = await fetch(`${studioServerUrl}/json?method=UploadFile`, {
-          method: 'POST',
-          credentials: 'include',
-          body: formData
-        });
-        const uploadJson = await uploadRes.json();
-        console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
-
-        const newObject = {
-          __classname__: 'WWAsset',
-          MetaData: {
-            BasicMetaData: {
-              Name: `web_${basic.Name}`,
-              Type: 'Image',
-              ObjectType: 'Image',
-              Format: content.Format,
-              Publication: { Id: basic.Publication.Id },
-              Category: { Id: basic.Category.Id },
-              WorkflowStatus: { Id: basic.WorkflowStatus?.Id || 'WIP' },
-              ...(basic.Brand?.Id ? { Brand: { Id: basic.Brand.Id } } : {})
-            },
-            ContentMetaData: {
-              Format: content.Format,
-              Width: content.Width,
-              Height: content.Height,
-              Dpi: content.Dpi,
-              ColorSpace: content.ColorSpace,
-              HighResFile: uploadJson.result.ContentPath
-            }
-          }
-        };
-
-        // Run ValidateObjects
-        const validateRes = await fetch(`${studioServerUrl}/json`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: 'ValidateObjects',
-            params: { Objects: [newObject] },
-            id: 98,
-            jsonrpc: '2.0'
-          })
-        });
-        console.log('[Duplicate Image Plugin] ValidateObjects result:', await validateRes.json());
-
-        // Diagnostic: GetObjectTemplate
-        const templateRes = await fetch(`${studioServerUrl}/json`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: 'GetObjectTemplate',
-            params: { ObjectType: 'Image' },
-            id: 99,
-            jsonrpc: '2.0'
-          })
-        });
-        console.log('[Duplicate Image Plugin] GetObjectTemplate result:', await templateRes.json());
-
-        // Diagnostic: GetMetaDataInfo
-        const mdiRes = await fetch(`${studioServerUrl}/json`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: 'GetMetaDataInfo',
-            params: { ObjectType: 'Image' },
-            id: 100,
-            jsonrpc: '2.0'
-          })
-        });
-        console.log('[Duplicate Image Plugin] GetMetaDataInfo result:', await mdiRes.json());
-
-        // Diagnostic: Test CreateObjects
-        const testCreateRes = await fetch(`${studioServerUrl}/json`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            method: 'CreateObjects',
-            params: {
-              Test: true,
-              Objects: [newObject]
-            },
-            id: 101,
-            jsonrpc: '2.0'
-          })
-        });
-        console.log('[Duplicate Image Plugin] Test CreateObjects result:', await testCreateRes.json());
-
-        // Real CreateObjects
+        // Build CopyObject payload
         const payload = {
-          method: 'CreateObjects',
+          method: 'CopyObject',
           params: {
-            Lock: true,
-            SaveFormattedContent: true,
-            Objects: [newObject]
+            SourceObjectId: objectId,
+            NewName: `web_${basic.Name}`,
+            TargetDossier: { Id: dossier?.Id || dossier?.id }
           },
-          id: 3,
+          id: 2,
           jsonrpc: '2.0'
         };
 
-        console.log('[Duplicate Image Plugin] CreateObjects payload:', payload);
+        console.log('[Duplicate Image Plugin] CopyObject payload:', payload);
 
-        const createRes = await fetch(`${studioServerUrl}/json`, {
+        const copyRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        const rawText = await createRes.text();
-        console.log('[Duplicate Image Plugin] Raw CreateObjects response text:', rawText);
+        const rawText = await copyRes.text();
+        console.log('[Duplicate Image Plugin] Raw CopyObject response text:', rawText);
 
-        let createJson = {};
+        let copyJson = {};
         try {
-          createJson = JSON.parse(rawText);
-          console.log('[Duplicate Image Plugin] Parsed CreateObjects response:', createJson);
+          copyJson = JSON.parse(rawText);
+          console.log('[Duplicate Image Plugin] Parsed CopyObject response:', copyJson);
         } catch (err) {
-          console.error('[Duplicate Image Plugin] Failed to parse CreateObjects JSON:', err);
+          console.error('[Duplicate Image Plugin] Failed to parse CopyObject JSON:', err);
         }
 
-        if (createJson?.result?.Objects?.length > 0) {
+        if (copyJson?.result?.Id) {
           alert('Image duplicated successfully.');
         } else {
-          console.error('[Duplicate Image Plugin] Unexpected CreateObjects response:', createJson);
-          alert('Failed to duplicate image. No objects returned.');
+          console.error('[Duplicate Image Plugin] Unexpected CopyObject response:', copyJson);
+          alert('Failed to duplicate image. No object returned.');
         }
       } catch (err) {
         console.error('[Duplicate Image Plugin] Error duplicating image:', err);
