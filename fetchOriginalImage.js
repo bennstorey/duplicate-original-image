@@ -1,5 +1,6 @@
-//3.4 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace
+// 4.0 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard
 
+console.log('// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -54,6 +55,14 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         const basic = meta.MetaData.BasicMetaData;
         const masterId = basic?.MasterId || '[none]';
+
+        // Sanity guard: Ensure selected name matches metadata name
+        if (!basic?.Name || basic.Name !== selected.Name) {
+          alert(`Mismatch between selected name and metadata name:\nSelected: ${selected.Name}\nMeta: ${basic.Name}`);
+          console.warn('[Duplicate Image Plugin] Name mismatch between selection and metadata.', { selected, basic });
+          return;
+        }
+
         const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}`;
         alert(alertText); // Diagnostic alert
 
