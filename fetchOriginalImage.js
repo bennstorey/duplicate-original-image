@@ -1,4 +1,4 @@
-//3.0 Duplicate Original Image Plugin using CopyObject with diagnostic GetObjectTemplate for CopyTo
+//3.1 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -70,6 +70,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           ]
         };
 
+        console.log('[Diagnostic] Payload to CopyObject:', JSON.stringify(copyPayload, null, 2));
         const copyRes = await ContentStationSdk.callServerMethod('CopyObject', copyPayload);
         console.log('[Duplicate Image Plugin] CopyObject response:', copyRes);
 
@@ -129,15 +130,41 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           ]
         };
 
-        const createRes = await ContentStationSdk.callServerMethod('CreateObjects', createPayload);
-        console.log('[Duplicate Image Plugin] CreateObjects response:', createRes);
+        console.log('[Diagnostic] Payload to CreateObjects:', JSON.stringify(createPayload, null, 2));
 
-        if (createRes?.Ids?.length) {
-          alert('Image duplicated successfully via fallback.');
-        } else {
-          console.error('[Duplicate Image Plugin] Both CopyObject and CreateObjects failed:', createRes);
-          alert('Failed to duplicate image. Both CopyObject and fallback failed.');
+        const createResRaw = await fetch('/server/CreateObjects', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(createPayload)
+        });
+
+        const status = createResRaw.status;
+        const headers = [...createResRaw.headers.entries()];
+        let bodyText;
+        try {
+          bodyText = await createResRaw.text();
+        } catch (e) {
+          bodyText = '[Could not read body]';
         }
+
+        console.log('[Diagnostic] CreateObjects HTTP status:', status);
+        console.log('[Diagnostic] CreateObjects response headers:', headers);
+        console.log('[Diagnostic] CreateObjects raw body:', bodyText);
+
+        try {
+          const parsedBody = JSON.parse(bodyText);
+          if (parsedBody?.Ids?.length) {
+            alert('Image duplicated successfully via fallback.');
+            return;
+          }
+        } catch (e) {
+          console.warn('[Duplicate Image Plugin] CreateObjects response was not valid JSON.');
+        }
+
+        alert('Failed to duplicate image. Both CopyObject and fallback failed.');
       } catch (err) {
         console.error('[Duplicate Image Plugin] Unexpected error:', err);
         alert('Unexpected error duplicating image. See console.');
