@@ -1,4 +1,4 @@
-//2.5 Duplicate Original Image Plugin (Dossier Toolbar Button Version with ValidateObjects)
+//2.6 Duplicate Original Image Plugin (Dossier Toolbar Button Version with Full Diagnostics)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -12,7 +12,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
   ContentStationSdk.onSignin((info) => {
     console.log('[Duplicate Image Plugin] onSignin:', info);
-    studioServerUrl = info?.ServerInfo?.Url || `${window.location.origin}`; // fixed path
+    studioServerUrl = info?.ServerInfo?.Url || `${window.location.origin}`;
   });
 
   ContentStationSdk.addDossierToolbarButton({
@@ -29,17 +29,17 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         return;
       }
 
-      console.log('[Duplicate Image Plugin] Raw selection object:', selection);
       const selected = selection[0];
       const objectId = selected?.Id || selected?.id || selected?.ID;
       console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
 
       if (!objectId) {
-        alert('Could not determine object ID from selection. Check console for structure.');
+        alert('Could not determine object ID from selection.');
         return;
       }
 
       try {
+        // Fetch metadata
         const metaRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
@@ -57,6 +57,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const basic = meta.MetaData.BasicMetaData;
         const content = meta.MetaData.ContentMetaData;
 
+        // Fetch version 1 binary
         const binRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
@@ -105,22 +106,66 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           }
         };
 
-        const validatePayload = {
-          method: 'ValidateObjects',
-          params: { Objects: [newObject] },
-          id: 98,
-          jsonrpc: '2.0'
-        };
-
+        // Run ValidateObjects
         const validateRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(validatePayload)
+          body: JSON.stringify({
+            method: 'ValidateObjects',
+            params: { Objects: [newObject] },
+            id: 98,
+            jsonrpc: '2.0'
+          })
         });
-        const validateJson = await validateRes.json();
-        console.log('[Duplicate Image Plugin] ValidateObjects result:', validateJson);
+        console.log('[Duplicate Image Plugin] ValidateObjects result:', await validateRes.json());
 
+        // Diagnostic: GetObjectTemplate
+        const templateRes = await fetch(`${studioServerUrl}/json`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'GetObjectTemplate',
+            params: { ObjectType: 'Image' },
+            id: 99,
+            jsonrpc: '2.0'
+          })
+        });
+        console.log('[Duplicate Image Plugin] GetObjectTemplate result:', await templateRes.json());
+
+        // Diagnostic: GetMetaDataInfo
+        const mdiRes = await fetch(`${studioServerUrl}/json`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'GetMetaDataInfo',
+            params: { ObjectType: 'Image' },
+            id: 100,
+            jsonrpc: '2.0'
+          })
+        });
+        console.log('[Duplicate Image Plugin] GetMetaDataInfo result:', await mdiRes.json());
+
+        // Diagnostic: Test CreateObjects
+        const testCreateRes = await fetch(`${studioServerUrl}/json`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'CreateObjects',
+            params: {
+              Test: true,
+              Objects: [newObject]
+            },
+            id: 101,
+            jsonrpc: '2.0'
+          })
+        });
+        console.log('[Duplicate Image Plugin] Test CreateObjects result:', await testCreateRes.json());
+
+        // Real CreateObjects
         const payload = {
           method: 'CreateObjects',
           params: {
