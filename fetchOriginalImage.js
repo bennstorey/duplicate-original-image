@@ -1,4 +1,4 @@
-//3.1 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics
+//3.2 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -27,6 +27,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       }
 
       const selected = selection[0];
+      console.log('[Duplicate Image Plugin] Full selection[0] object:', selected);
       const objectId = selected?.Id || selected?.id || selected?.ID;
       console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
 
