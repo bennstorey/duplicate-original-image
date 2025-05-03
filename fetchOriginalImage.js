@@ -1,4 +1,4 @@
-//2.4 Duplicate Original Image Plugin (Dossier Toolbar Button Version with ValidateObjects)
+//2.5 Duplicate Original Image Plugin (Dossier Toolbar Button Version with ValidateObjects)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -12,7 +12,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
   ContentStationSdk.onSignin((info) => {
     console.log('[Duplicate Image Plugin] onSignin:', info);
-    studioServerUrl = info?.ServerInfo?.Url || `${window.location.origin}/server`;
+    studioServerUrl = info?.ServerInfo?.Url || `${window.location.origin}`; // fixed path
   });
 
   ContentStationSdk.addDossierToolbarButton({
