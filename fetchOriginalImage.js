@@ -1,4 +1,4 @@
-//2.3 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
+//2.4 Duplicate Original Image Plugin (Dossier Toolbar Button Version with ValidateObjects)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -81,36 +81,52 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const uploadJson = await uploadRes.json();
         console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
 
+        const newObject = {
+          __classname__: 'WWAsset',
+          MetaData: {
+            BasicMetaData: {
+              Name: `web_${basic.Name}`,
+              Type: 'Image',
+              ObjectType: 'Image',
+              Format: content.Format,
+              Publication: { Id: basic.Publication.Id },
+              Category: { Id: basic.Category.Id },
+              WorkflowStatus: { Id: basic.WorkflowStatus?.Id || 'WIP' },
+              ...(basic.Brand?.Id ? { Brand: { Id: basic.Brand.Id } } : {})
+            },
+            ContentMetaData: {
+              Format: content.Format,
+              Width: content.Width,
+              Height: content.Height,
+              Dpi: content.Dpi,
+              ColorSpace: content.ColorSpace,
+              HighResFile: uploadJson.result.ContentPath
+            }
+          }
+        };
+
+        const validatePayload = {
+          method: 'ValidateObjects',
+          params: { Objects: [newObject] },
+          id: 98,
+          jsonrpc: '2.0'
+        };
+
+        const validateRes = await fetch(`${studioServerUrl}/json`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validatePayload)
+        });
+        const validateJson = await validateRes.json();
+        console.log('[Duplicate Image Plugin] ValidateObjects result:', validateJson);
+
         const payload = {
           method: 'CreateObjects',
           params: {
             Lock: true,
             SaveFormattedContent: true,
-            Objects: [
-              {
-                __classname__: 'WWAsset',
-                MetaData: {
-                  BasicMetaData: {
-                    Name: `web_${basic.Name}`,
-                    Type: 'Image',
-                    ObjectType: 'Image',
-                    Format: content.Format,
-                    Publication: { Id: basic.Publication.Id },
-                    Category: { Id: basic.Category.Id },
-                    WorkflowStatus: { Id: basic.WorkflowStatus?.Id || 'WIP' },
-                    ...(basic.Brand?.Id ? { Brand: { Id: basic.Brand.Id } } : {})
-                  },
-                  ContentMetaData: {
-                    Format: content.Format,
-                    Width: content.Width,
-                    Height: content.Height,
-                    Dpi: content.Dpi,
-                    ColorSpace: content.ColorSpace,
-                    HighResFile: uploadJson.result.ContentPath
-                  }
-                }
-              }
-            ]
+            Objects: [newObject]
           },
           id: 3,
           jsonrpc: '2.0'
@@ -125,8 +141,16 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           body: JSON.stringify(payload)
         });
 
-        const createJson = await createRes.json();
-        console.log('[Duplicate Image Plugin] CreateObjects response:', createJson);
+        const rawText = await createRes.text();
+        console.log('[Duplicate Image Plugin] Raw CreateObjects response text:', rawText);
+
+        let createJson = {};
+        try {
+          createJson = JSON.parse(rawText);
+          console.log('[Duplicate Image Plugin] Parsed CreateObjects response:', createJson);
+        } catch (err) {
+          console.error('[Duplicate Image Plugin] Failed to parse CreateObjects JSON:', err);
+        }
 
         if (createJson?.result?.Objects?.length > 0) {
           alert('Image duplicated successfully.');
