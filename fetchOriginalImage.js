@@ -1,4 +1,4 @@
-// 1.0 Duplicate Original Image Plugin using CopyObject
+//1.1 Duplicate Original Image Plugin using CopyObject
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -62,7 +62,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           params: {
             SourceObjectId: objectId,
             NewName: `web_${basic.Name}`,
-            TargetDossier: { Id: dossier?.Id || dossier?.id }
+            Dossier_Id: dossier?.Id || dossier?.id
           },
           id: 2,
           jsonrpc: '2.0'
