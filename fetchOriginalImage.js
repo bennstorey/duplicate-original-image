@@ -1,6 +1,6 @@
-// 4.0 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard
+// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard
 
-console.log('// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
+console.log('// 4.1 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -41,14 +41,14 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const dossierId = dossier?.Id || dossier?.id;
 
         // Diagnostic: Fetch CopyTo template
-        const diagTemplate = await ContentStationSdk.callServerMethod('GetObjectTemplate', {
+        const diagTemplate = await ContentStationSdk.callServerMethodUsingCookieAuth('GetObjectTemplate', {
           Operation: 'CopyTo',
           ObjectType: 'Image'
         });
         console.log('[Duplicate Image Plugin] GetObjectTemplate (CopyTo) response:', diagTemplate);
 
         // Step 1: Fetch metadata
-        const meta = await ContentStationSdk.callServerMethod('GetObjectMetaData', {
+        const meta = await ContentStationSdk.callServerMethodUsingCookieAuth('GetObjectMetaData', {
           Id: objectId
         });
         console.log('[Duplicate Image Plugin] Original object metadata:', meta);
@@ -85,7 +85,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         };
 
         console.log('[Diagnostic] Payload to CopyObject:', JSON.stringify(copyPayload, null, 2));
-        const copyRes = await ContentStationSdk.callServerMethod('CopyObject', copyPayload);
+        const copyRes = await ContentStationSdk.callServerMethodUsingCookieAuth('CopyObject', copyPayload);
         console.log('[Duplicate Image Plugin] CopyObject response:', copyRes);
 
         if (Array.isArray(copyRes?.Ids) && copyRes.Ids.length > 0) {
@@ -97,7 +97,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         console.warn('[Duplicate Image Plugin] CopyObject failed, falling back to CreateObjects.');
 
         // Step 3: Fetch version 1 binary
-        const binaryBlob = await ContentStationSdk.callServerMethod('GetObjectBinary', {
+        const binaryBlob = await ContentStationSdk.callServerMethodUsingCookieAuth('GetObjectBinary', {
           Id: objectId,
           Version: 1,
           Format: 'blob'
