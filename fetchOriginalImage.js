@@ -1,4 +1,4 @@
-//1.7 Duplicate Original Image Plugin using CopyObject with fallback to CreateObjects with re-upload
+//1.8 Duplicate Original Image Plugin using CopyObject with fallback to CreateObjects with re-upload
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -67,7 +67,8 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         const copyRes = await ContentStationSdk.callServerMethod('CopyObject', copyPayload);
         console.log('[Duplicate Image Plugin] CopyObject response:', copyRes);
 
-        if (copyRes?.Id || (copyRes?.Ids && copyRes.Ids.length)) {
+        if (Array.isArray(copyRes?.Ids) && copyRes.Ids.length > 0) {
+          console.log('[Duplicate Image Plugin] Duplicated image ID:', copyRes.Ids[0]);
           alert('Image duplicated successfully.');
           return;
         }
