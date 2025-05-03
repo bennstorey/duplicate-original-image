@@ -1,4 +1,4 @@
-//2.1 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
+//2.2 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -40,30 +40,40 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       }
 
       try {
-        const metaRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/GetObjectMetaData`, {
+        const metaRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Id: objectId })
+          body: JSON.stringify({
+            method: 'GetObjectMetaData',
+            params: { Id: objectId },
+            id: 1,
+            jsonrpc: '2.0'
+          })
         });
-        const meta = await metaRes.json();
+        const meta = (await metaRes.json()).result;
         console.log('[Duplicate Image Plugin] Original object metadata:', meta);
 
         const basic = meta.MetaData.BasicMetaData;
         const content = meta.MetaData.ContentMetaData;
 
-        const binRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/GetObjectBinary`, {
+        const binRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Id: objectId, Version: 1 })
+          body: JSON.stringify({
+            method: 'GetObjectBinary',
+            params: { Id: objectId, Version: 1 },
+            id: 2,
+            jsonrpc: '2.0'
+          })
         });
         const blob = await binRes.blob();
 
         const formData = new FormData();
         formData.append('file', blob, `web_${basic.Name}`);
 
-        const uploadRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/UploadFile`, {
+        const uploadRes = await fetch(`${studioServerUrl}/json?method=UploadFile`, {
           method: 'POST',
           credentials: 'include',
           body: formData
@@ -72,33 +82,40 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
 
         const payload = {
-          Lock: true,
-          Objects: [
-            {
-              __classname__: 'WWAsset',
-              MetaData: {
-                BasicMetaData: {
-                  Name: `web_${basic.Name}`,
-                  Type: 'Image',
-                  Publication: { Id: basic.Publication.Id },
-                  Category: { Id: basic.Category.Id }
-                },
-                ContentMetaData: {
-                  Format: content.Format,
-                  Width: content.Width,
-                  Height: content.Height,
-                  Dpi: content.Dpi,
-                  ColorSpace: content.ColorSpace,
-                  HighResFile: uploadJson.ContentPath
+          method: 'CreateObjects',
+          params: {
+            Lock: true,
+            Objects: [
+              {
+                __classname__: 'WWAsset',
+                MetaData: {
+                  BasicMetaData: {
+                    Name: `web_${basic.Name}`,
+                    Type: 'Image',
+                    ObjectType: 'Image',
+                    Publication: { Id: basic.Publication.Id },
+                    Category: { Id: basic.Category.Id },
+                    ...(basic.Brand?.Id ? { Brand: { Id: basic.Brand.Id } } : {})
+                  },
+                  ContentMetaData: {
+                    Format: content.Format,
+                    Width: content.Width,
+                    Height: content.Height,
+                    Dpi: content.Dpi,
+                    ColorSpace: content.ColorSpace,
+                    HighResFile: uploadJson.result.ContentPath
+                  }
                 }
               }
-            }
-          ]
+            ]
+          },
+          id: 3,
+          jsonrpc: '2.0'
         };
 
         console.log('[Duplicate Image Plugin] CreateObjects payload:', payload);
 
-        const createRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/CreateObjects`, {
+        const createRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
