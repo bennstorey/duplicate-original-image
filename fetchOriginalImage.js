@@ -1,4 +1,4 @@
-//3.2 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics
+//3.3 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -53,6 +53,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         console.log('[Duplicate Image Plugin] Original object metadata:', meta);
 
         const basic = meta.MetaData.BasicMetaData;
+        alert(`ID: ${objectId}\nServer returned Name: ${basic.Name}`); // Diagnostic alert
         const newName = `web_${basic.Name}`;
 
         // Step 2: Attempt CopyObject with required fields from template
