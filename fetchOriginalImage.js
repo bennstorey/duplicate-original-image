@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard
 
-console.log('// 4.2 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
+console.log('// 4.3 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -39,16 +39,6 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
       try {
         const dossierId = dossier?.Id || dossier?.id;
-
-        // Diagnostic: Fetch CopyTo template
-        const templateRes = await fetch('/server/GetObjectTemplate', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ Operation: 'CopyTo', ObjectType: 'Image' })
-        });
-        const diagTemplate = await templateRes.json();
-        console.log('[Duplicate Image Plugin] GetObjectTemplate (CopyTo) response:', diagTemplate);
 
         // Step 1: Fetch metadata
         const metaRes = await fetch('/server/GetObjectMetaData', {
