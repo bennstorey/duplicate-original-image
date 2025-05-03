@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with Studio Cloud-compatible endpoints + diagnostics
 
-console.log('//5.5 Duplicate Original Image Plugin vCLOUD_FINAL_FIX');
+console.log('//6.0 Duplicate Original Image Plugin vCLOUD_FINAL_FIX');
 
 (function () {
   if (!window.ContentStationSdk) {
