@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with Studio Cloud-compatible endpoints + diagnostics
 
-console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
+console.log('// 5.3 Duplicate Original Image Plugin vCLOUD_FIX_TEMPLATE');
 
 (function () {
   if (!window.ContentStationSdk) {
@@ -38,7 +38,7 @@ console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
         const dossierId = dossier?.Id || dossier?.id;
 
         const post = async (method, payload) => {
-          const url = `/server/index.php?protocol=JSON&method=${method}`;
+          const url = `/server/json/${method}`;
           const res = await fetch(url, {
             method: 'POST',
             credentials: 'include',
@@ -50,43 +50,49 @@ console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
           console.log(`[HTTP] ${method} raw body:`, text);
           try {
             return JSON.parse(text);
-          } catch {
+          } catch (err) {
+            console.error(`[${method}] Failed to parse JSON`, err);
             return {};
           }
         };
 
         const meta = await post('GetObjectMetaData', { ID: objectId });
-        const basic = meta?.MetaData?.BasicMetaData || {};
-        const masterId = basic?.MasterId || '[none]';
+        const basic = meta?.MetaData?.BasicMetaData;
 
-        if (!basic?.Name || basic.Name !== selected.Name) {
+        if (!basic || !basic.Name) {
+          alert('Failed to retrieve object metadata. Cannot continue.');
+          console.error('Empty metadata response:', meta);
+          return;
+        }
+
+        if (basic.Name !== selected.Name) {
           alert(`Mismatch between selected and metadata name:\nSelected: ${selected.Name}\nMeta: ${basic.Name}`);
           return;
         }
 
-        const metaInfo = await post('GetMetaDataInfo', { ObjectType: 'Image' });
+        const newName = `web_${basic.Name}`;
+
+        const tmpl = await post('GetObjectTemplate', { ObjectType: 'Image' });
         const config = await post('GetConfigInfo', {});
 
         const pubs = config?.Publication || [],
               brands = config?.Brand || [],
               cats = config?.Category || [];
 
-        let pubId = pubs.find(p => p.Name === basic.Publication)?.Id || basic.Publication;
-        let brandId = brands.find(b => b.Name === basic.Brand)?.Id || basic.Brand;
-        let catId = cats.find(c => c.Name === basic.Category)?.Id || basic.Category;
-
-        alert(`ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}\nPublication ID: ${pubId}\nBrand ID: ${brandId}\nCategory ID: ${catId}`);
-
-        const newName = `web_${basic.Name}`;
-        const clonedBasic = { ...basic, Name: newName };
-        delete clonedBasic.Id;
-        delete clonedBasic.Version;
-        delete clonedBasic.MasterId;
+        let pubId = pubs.find(p => p.Name === basic.Publication)?.Id || tmpl?.Object?.Publication || '';
+        let brandId = brands.find(b => b.Name === basic.Brand)?.Id || tmpl?.Object?.Brand || '';
+        let catId = cats.find(c => c.Name === basic.Category)?.Id || tmpl?.Object?.Category || '';
 
         const copyPayload = {
           SourceID: objectId,
           Targets: [
-            { Dossier: { Id: dossierId }, BasicMetaData: clonedBasic }
+            {
+              Dossier: { Id: dossierId },
+              BasicMetaData: {
+                ...basic,
+                Name: newName
+              }
+            }
           ]
         };
 
@@ -98,12 +104,7 @@ console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
 
         console.warn('[Duplicate Image Plugin] CopyObject failed, fallback starting.');
 
-        const binaryRes = await post('GetObjectBinary', {
-          Id: objectId,
-          Version: 1,
-          Format: 'blob'
-        });
-        const blob = await (await fetch(`/server/index.php?protocol=JSON&method=GetObjectBinary`, {
+        const blob = await (await fetch(`/server/json/GetObjectBinary`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -119,6 +120,7 @@ console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
           credentials: 'include',
           body: formData
         });
+
         const uploadJson = await uploadRes.json();
         const { UploadToken, ContentPath } = uploadJson.result || {};
 
@@ -128,11 +130,11 @@ console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
               __classname__: 'WWAsset',
               ObjectType: 'Image',
               Name: newName,
+              Format: basic.Format,
               Category: catId,
               Publication: pubId,
               Brand: brandId,
               Dossier: { Id: dossierId },
-              Format: basic.Format,
               ContentMetaData: { ContentPath, UploadToken },
               BasicMetaData: {
                 Type: 'Image',
