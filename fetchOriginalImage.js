@@ -1,7 +1,6 @@
-// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard
+// Duplicate Original Image Plugin using CopyObject with Studio Cloud-compatible endpoints + diagnostics
 
-console.log('// 5.0 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + validation via GetMetaDataInfo + version trace + selection sanity guard');
-console.log('[Duplicate Image Plugin] Registering plugin...');
+console.log('// 5.1 Duplicate Original Image Plugin vFINAL_CLOUD_SAFE');
 
 (function () {
   if (!window.ContentStationSdk) {
@@ -23,133 +22,97 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       console.log('[Duplicate Image Plugin] Action triggered.');
       if (!selection || selection.length !== 1) {
         alert('Please select exactly one image.');
-        console.warn('[Duplicate Image Plugin] Invalid selection:', selection);
         return;
       }
 
       const selected = selection[0];
-      console.log('[Duplicate Image Plugin] Full selection[0] object:', selected);
       const objectId = selected?.Id || selected?.id || selected?.ID;
       console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
 
       if (!objectId) {
-        alert('Could not determine object ID from selection.');
+        alert('Invalid object ID.');
         return;
       }
 
       try {
         const dossierId = dossier?.Id || dossier?.id;
 
-        const metaRes = await fetch('/server/GetObjectMetaData', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ID: objectId })
-        });
-        const meta = await metaRes.json();
-        console.log('[Duplicate Image Plugin] Original object metadata:', meta);
+        const post = async (method, payload) => {
+          const url = `/server/index.php?protocol=JSON&method=${method}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const text = await res.text();
+          console.log(`[HTTP] ${method} status ${res.status}`);
+          console.log(`[HTTP] ${method} raw body:`, text);
+          try {
+            return JSON.parse(text);
+          } catch {
+            return {};
+          }
+        };
 
-        const basic = meta.MetaData.BasicMetaData;
+        const meta = await post('GetObjectMetaData', { ID: objectId });
+        const basic = meta?.MetaData?.BasicMetaData || {};
         const masterId = basic?.MasterId || '[none]';
 
         if (!basic?.Name || basic.Name !== selected.Name) {
-          alert(`Mismatch between selected name and metadata name:\nSelected: ${selected.Name}\nMeta: ${basic.Name}`);
-          console.warn('[Duplicate Image Plugin] Name mismatch between selection and metadata.', { selected, basic });
+          alert(`Mismatch between selected and metadata name:\nSelected: ${selected.Name}\nMeta: ${basic.Name}`);
           return;
         }
 
-        const metaInfoRes = await fetch('/server/GetMetaDataInfo', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ObjectType: 'Image' })
-        });
-        const metaInfo = await metaInfoRes.json();
-        console.log('[Diagnostic] GetMetaDataInfo for Image:', metaInfo);
+        const metaInfo = await post('GetMetaDataInfo', { ObjectType: 'Image' });
+        const config = await post('GetConfigInfo', {});
 
-        const configRes = await fetch('/server/GetConfigInfo', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
-        });
-        const config = await configRes.json();
-        const publications = config?.Publication || [];
-        const brands = config?.Brand || [];
-        const categories = config?.Category || [];
-        console.log('[Diagnostic] Publications:', publications);
-        console.log('[Diagnostic] Brands:', brands);
-        console.log('[Diagnostic] Categories:', categories);
+        const pubs = config?.Publication || [],
+              brands = config?.Brand || [],
+              cats = config?.Category || [];
 
-        let publicationId = basic.Publication;
-        const pubMatch = publications.find(pub => pub.Name === basic.Publication);
-        if (pubMatch) {
-          publicationId = pubMatch.Id;
-        }
+        let pubId = pubs.find(p => p.Name === basic.Publication)?.Id || basic.Publication;
+        let brandId = brands.find(b => b.Name === basic.Brand)?.Id || basic.Brand;
+        let catId = cats.find(c => c.Name === basic.Category)?.Id || basic.Category;
 
-        let brandId = basic.Brand;
-        const brandMatch = brands.find(b => b.Name === basic.Brand);
-        if (brandMatch) {
-          brandId = brandMatch.Id;
-        }
-
-        let categoryId = basic.Category;
-        const catMatch = categories.find(c => c.Name === basic.Category);
-        if (catMatch) {
-          categoryId = catMatch.Id;
-        }
-
-        const alertText = `ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}\nPublication ID: ${publicationId}\nBrand ID: ${brandId}\nCategory ID: ${categoryId}`;
-        alert(alertText);
+        alert(`ID: ${objectId}\nName: ${basic.Name}\nMasterId: ${masterId}\nPublication ID: ${pubId}\nBrand ID: ${brandId}\nCategory ID: ${catId}`);
 
         const newName = `web_${basic.Name}`;
-
-        const originalBasic = meta.MetaData.BasicMetaData;
-        const clonedBasicMeta = { ...originalBasic, Name: newName };
-        delete clonedBasicMeta.Id;
-        delete clonedBasicMeta.Version;
-        delete clonedBasicMeta.MasterId;
+        const clonedBasic = { ...basic, Name: newName };
+        delete clonedBasic.Id;
+        delete clonedBasic.Version;
+        delete clonedBasic.MasterId;
 
         const copyPayload = {
           SourceID: objectId,
           Targets: [
-            {
-              Dossier: { Id: dossierId },
-              BasicMetaData: clonedBasicMeta
-            }
+            { Dossier: { Id: dossierId }, BasicMetaData: clonedBasic }
           ]
         };
 
-        console.log('[Diagnostic] Payload to CopyObject:', JSON.stringify(copyPayload, null, 2));
-
-        const copyResRaw = await fetch('/server/CopyObject', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(copyPayload)
-        });
-        const copyRes = await copyResRaw.json();
-        console.log('[Duplicate Image Plugin] CopyObject response:', copyRes);
-
+        const copyRes = await post('CopyObject', copyPayload);
         if (Array.isArray(copyRes?.Ids) && copyRes.Ids.length > 0) {
-          console.log('[Duplicate Image Plugin] Duplicated image ID:', copyRes.Ids[0]);
           alert('Image duplicated successfully.');
           return;
         }
 
-        console.warn('[Duplicate Image Plugin] CopyObject failed, falling back to CreateObjects.');
+        console.warn('[Duplicate Image Plugin] CopyObject failed, fallback starting.');
 
-        const binaryRes = await fetch('/server/GetObjectBinary', {
+        const binaryRes = await post('GetObjectBinary', {
+          Id: objectId,
+          Version: 1,
+          Format: 'blob'
+        });
+        const blob = await (await fetch(`/server/index.php?protocol=JSON&method=GetObjectBinary`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ Id: objectId, Version: 1, Format: 'blob' })
-        });
-        const binaryBlob = await binaryRes.blob();
+        })).blob();
 
         const formData = new FormData();
         const fileName = `${newName}.${basic.Extension || 'jpg'}`;
-        formData.append('file', binaryBlob, fileName);
+        formData.append('file', blob, fileName);
 
         const uploadRes = await fetch('/upload/UploadFile', {
           method: 'POST',
@@ -157,9 +120,7 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
           body: formData
         });
         const uploadJson = await uploadRes.json();
-        console.log('[Duplicate Image Plugin] UploadFile response:', uploadJson);
-
-        const { UploadToken, ContentPath } = uploadJson.result;
+        const { UploadToken, ContentPath } = uploadJson.result || {};
 
         const createPayload = {
           Objects: [
@@ -167,62 +128,30 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
               __classname__: 'WWAsset',
               ObjectType: 'Image',
               Name: newName,
-              Category: categoryId,
-              Publication: publicationId,
+              Category: catId,
+              Publication: pubId,
               Brand: brandId,
               Dossier: { Id: dossierId },
               Format: basic.Format,
-              ContentMetaData: {
-                ContentPath,
-                UploadToken
-              },
+              ContentMetaData: { ContentPath, UploadToken },
               BasicMetaData: {
                 Type: 'Image',
-                Publication: publicationId,
-                Category: categoryId
+                Publication: pubId,
+                Category: catId
               }
             }
           ]
         };
 
-        console.log('[Diagnostic] Payload to CreateObjects:', JSON.stringify(createPayload, null, 2));
-
-        const createResRaw = await fetch('/server/CreateObjects', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(createPayload)
-        });
-
-        const status = createResRaw.status;
-        const headers = [...createResRaw.headers.entries()];
-        let bodyText;
-        try {
-          bodyText = await createResRaw.text();
-        } catch (e) {
-          bodyText = '[Could not read body]';
+        const createRes = await post('CreateObjects', createPayload);
+        if (Array.isArray(createRes?.Ids) && createRes.Ids.length > 0) {
+          alert('Image duplicated successfully via fallback.');
+        } else {
+          alert('Failed to duplicate image. CopyObject and fallback both failed.');
         }
-
-        console.log('[Diagnostic] CreateObjects HTTP status:', status);
-        console.log('[Diagnostic] CreateObjects response headers:', headers);
-        console.log('[Diagnostic] CreateObjects raw body:', bodyText);
-
-        try {
-          const parsedBody = JSON.parse(bodyText);
-          if (parsedBody?.Ids?.length) {
-            alert('Image duplicated successfully via fallback.');
-            return;
-          }
-        } catch (e) {
-          console.warn('[Duplicate Image Plugin] CreateObjects response was not valid JSON.');
-        }
-
-        alert('Failed to duplicate image. Both CopyObject and fallback failed.');
       } catch (err) {
-        console.error('[Duplicate Image Plugin] Unexpected error:', err);
-        alert('Unexpected error duplicating image. See console.');
+        console.error('[Duplicate Image Plugin] Fatal error:', err);
+        alert('Unexpected error. See console for details.');
       }
     }
   });
