@@ -1,4 +1,4 @@
-//1.1 Duplicate Original Image Plugin using CopyObject
+//1.2 Duplicate Original Image Plugin using CopyObject with fallback and validation
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -55,34 +55,37 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         console.log('[Duplicate Image Plugin] Original object metadata:', meta);
 
         const basic = meta.MetaData.BasicMetaData;
+        const newName = `web_${basic.Name}`;
+        const dossierId = dossier?.Id || dossier?.id;
 
-        // Build CopyObject payload
-        const payload = {
+        // Attempt CopyObject first
+        const copyPayload = {
           method: 'CopyObject',
           params: {
             SourceObjectId: objectId,
-            NewName: `web_${basic.Name}`,
-            Dossier_Id: dossier?.Id || dossier?.id
+            NewName: newName,
+            Dossier_Id: dossierId,
+            PreserveVersions: true
           },
           id: 2,
           jsonrpc: '2.0'
         };
 
-        console.log('[Duplicate Image Plugin] CopyObject payload:', payload);
+        console.log('[Duplicate Image Plugin] CopyObject payload:', copyPayload);
 
         const copyRes = await fetch(`${studioServerUrl}/json`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(copyPayload)
         });
 
-        const rawText = await copyRes.text();
-        console.log('[Duplicate Image Plugin] Raw CopyObject response text:', rawText);
+        const rawCopyText = await copyRes.text();
+        console.log('[Duplicate Image Plugin] Raw CopyObject response text:', rawCopyText);
 
         let copyJson = {};
         try {
-          copyJson = JSON.parse(rawText);
+          copyJson = JSON.parse(rawCopyText);
           console.log('[Duplicate Image Plugin] Parsed CopyObject response:', copyJson);
         } catch (err) {
           console.error('[Duplicate Image Plugin] Failed to parse CopyObject JSON:', err);
@@ -90,13 +93,66 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
 
         if (copyJson?.result?.Id) {
           alert('Image duplicated successfully.');
+          return;
+        }
+
+        console.warn('[Duplicate Image Plugin] CopyObject failed or was not allowed, falling back to CreateObjects.');
+
+        // Fallback to CreateObjects
+        const uploadToken = basic.UploadToken || '';
+
+        const fallbackPayload = {
+          method: 'CreateObjects',
+          params: {
+            Objects: [
+              {
+                __classname__: 'WWAsset',
+                ObjectType: 'Image',
+                Name: newName,
+                Category: basic.Category,
+                Publication: basic.Publication,
+                Brand: basic.Brand,
+                Dossier: { Id: dossierId },
+                ContentMetaData: {
+                  ContentPath: basic.ContentPath,
+                  UploadToken: uploadToken
+                }
+              }
+            ]
+          },
+          id: 3,
+          jsonrpc: '2.0'
+        };
+
+        console.log('[Duplicate Image Plugin] CreateObjects payload:', fallbackPayload);
+
+        const createRes = await fetch(`${studioServerUrl}/json`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fallbackPayload)
+        });
+
+        const rawCreateText = await createRes.text();
+        console.log('[Duplicate Image Plugin] Raw CreateObjects response text:', rawCreateText);
+
+        let createJson = {};
+        try {
+          createJson = JSON.parse(rawCreateText);
+          console.log('[Duplicate Image Plugin] Parsed CreateObjects response:', createJson);
+        } catch (err) {
+          console.error('[Duplicate Image Plugin] Failed to parse CreateObjects JSON:', err);
+        }
+
+        if (createJson?.result?.Ids?.length) {
+          alert('Image duplicated successfully via fallback.');
         } else {
-          console.error('[Duplicate Image Plugin] Unexpected CopyObject response:', copyJson);
-          alert('Failed to duplicate image. No object returned.');
+          console.error('[Duplicate Image Plugin] Both CopyObject and CreateObjects failed:', createJson);
+          alert('Failed to duplicate image. Both CopyObject and fallback failed.');
         }
       } catch (err) {
-        console.error('[Duplicate Image Plugin] Error duplicating image:', err);
-        alert('Failed to duplicate image. Check console for details.');
+        console.error('[Duplicate Image Plugin] Unexpected error:', err);
+        alert('Unexpected error duplicating image. See console.');
       }
     }
   });
