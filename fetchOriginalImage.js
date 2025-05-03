@@ -1,4 +1,4 @@
-//2.0 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
+//2.1 Duplicate Original Image Plugin (Dossier Toolbar Button Version)
 
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
@@ -29,8 +29,15 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
         return;
       }
 
-      const objectId = selection[0].Id;
+      console.log('[Duplicate Image Plugin] Raw selection object:', selection);
+      const selected = selection[0];
+      const objectId = selected?.Id || selected?.id || selected?.ID;
       console.log('[Duplicate Image Plugin] Selected object ID:', objectId);
+
+      if (!objectId) {
+        alert('Could not determine object ID from selection. Check console for structure.');
+        return;
+      }
 
       try {
         const metaRes = await fetch(`${studioServerUrl}/Plugin/Api/Rest/GetObjectMetaData`, {
