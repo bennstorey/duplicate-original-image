@@ -1,6 +1,6 @@
-// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard
+// Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaDataById for Studio Cloud
 
-console.log('// 4.3 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard');
+console.log('// 4.4 Duplicate Original Image Plugin using CopyObject with enhanced diagnostics + version trace + selection sanity guard + uses GetObjectMetaDataById for Studio Cloud');
 console.log('[Duplicate Image Plugin] Registering plugin...');
 
 (function () {
@@ -40,8 +40,8 @@ console.log('[Duplicate Image Plugin] Registering plugin...');
       try {
         const dossierId = dossier?.Id || dossier?.id;
 
-        // Step 1: Fetch metadata
-        const metaRes = await fetch('/server/GetObjectMetaData', {
+        // Step 1: Fetch metadata using GetObjectMetaDataById (Cloud-compatible)
+        const metaRes = await fetch('/server/GetObjectMetaDataById', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
