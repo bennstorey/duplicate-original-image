@@ -1,6 +1,6 @@
 // Duplicate Original Image Plugin using CopyObject with Studio Cloud-compatible endpoints + diagnostics
 
-console.log('// 5.3 Duplicate Original Image Plugin vCLOUD_FIX_TEMPLATE');
+console.log('//5.4 Duplicate Original Image Plugin vCLOUD_FINAL_FIX');
 
 (function () {
   if (!window.ContentStationSdk) {
@@ -38,7 +38,7 @@ console.log('// 5.3 Duplicate Original Image Plugin vCLOUD_FIX_TEMPLATE');
         const dossierId = dossier?.Id || dossier?.id;
 
         const post = async (method, payload) => {
-          const url = `/server/json/${method}`;
+          const url = `/server/index.php?protocol=JSON&method=${method}`;
           const res = await fetch(url, {
             method: 'POST',
             credentials: 'include',
@@ -104,7 +104,7 @@ console.log('// 5.3 Duplicate Original Image Plugin vCLOUD_FIX_TEMPLATE');
 
         console.warn('[Duplicate Image Plugin] CopyObject failed, fallback starting.');
 
-        const blob = await (await fetch(`/server/json/GetObjectBinary`, {
+        const blob = await (await fetch(`/server/index.php?protocol=JSON&method=GetObjectBinary`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
