@@ -1,8 +1,7 @@
 // Duplicate Image Plugin (with version 1 duplication)
 // Assumes cookie-based auth and Studio Web SDK context
-//version 2.3
+//version 2.4
 //implementaiton url: https://bennstorey.github.io/duplicate-original-image/fetchOriginalImage.js
-
 
 const { registerPlugin, showToast } = window.contentstationExtensionApi;
 
@@ -11,7 +10,7 @@ registerPlugin('duplicate-original-image', context => {
   context.dossier.registerToolbarButton({
     icon: 'copy',
     tooltip: 'Duplicate Original Image (v1)',
-    onClick(selection) {
+    async onClick(selection) {
       console.log('[Duplicate Image Plugin] Toolbar button clicked');
         if (!selection || selection.length === 0) throw new Error('No objects selected');
 
