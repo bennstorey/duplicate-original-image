@@ -1,6 +1,6 @@
 // Duplicate Image Plugin (with version 1 duplication)
 // Assumes cookie-based auth and Studio Web SDK context
-//version 2.2
+//version 2.3
 //implementaiton url: https://bennstorey.github.io/duplicate-original-image/fetchOriginalImage.js
 
 
