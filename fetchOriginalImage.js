@@ -3,21 +3,21 @@
 //version 2.2
 //implementaiton url: https://bennstorey.github.io/duplicate-original-image/fetchOriginalImage.js
 
-import { registerPlugin, showToast } from 'contentstation-extension-api';
+
+const { registerPlugin, showToast } = window.contentstationExtensionApi;
 
 registerPlugin('duplicate-original-image', context => {
   console.log('[Duplicate Image Plugin] Plugin loaded');
   context.dossier.registerToolbarButton({
     icon: 'copy',
     tooltip: 'Duplicate Original Image (v1)',
-    async onClick(selectionContext) {
-      try {
-        const selection = selectionContext.selection;
+    onClick(selection) {
+      console.log('[Duplicate Image Plugin] Toolbar button clicked');
         if (!selection || selection.length === 0) throw new Error('No objects selected');
 
         const image = selection[0];
         const objectId = image.id;
-        const dossierId = image.parentId || image.dossier?.id;
+        const dossierId = image.dossier?.id || image.parentId;
         if (!dossierId) throw new Error('Dossier ID missing');
 
         // 1. Get full object metadata
