@@ -1,11 +1,12 @@
 // Duplicate Image Plugin (with version 1 duplication)
 // Assumes cookie-based auth and Studio Web SDK context
-//version 2.1
+//version 2.2
 //implementaiton url: https://bennstorey.github.io/duplicate-original-image/fetchOriginalImage.js
 
 import { registerPlugin, showToast } from 'contentstation-extension-api';
 
 registerPlugin('duplicate-original-image', context => {
+  console.log('[Duplicate Image Plugin] Plugin loaded');
   context.dossier.registerToolbarButton({
     icon: 'copy',
     tooltip: 'Duplicate Original Image (v1)',
