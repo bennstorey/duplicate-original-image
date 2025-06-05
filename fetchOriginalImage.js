@@ -1,6 +1,6 @@
 // Duplicate Image Plugin (with version 1 duplication)
 // Assumes cookie-based auth and Studio Web SDK context
-// Version 2.0
+//version 2.1
 
 import { registerPlugin, showToast } from 'contentstation-extension-api';
 
@@ -8,12 +8,15 @@ registerPlugin('duplicate-original-image', context => {
   context.dossier.registerToolbarButton({
     icon: 'copy',
     tooltip: 'Duplicate Original Image (v1)',
-    async onClick(selection) {
+    async onClick(selectionContext) {
       try {
+        const selection = selectionContext.selection;
         if (!selection || selection.length === 0) throw new Error('No objects selected');
 
         const image = selection[0];
         const objectId = image.id;
+        const dossierId = image.parentId || image.dossier?.id;
+        if (!dossierId) throw new Error('Dossier ID missing');
 
         // 1. Get full object metadata
         const metaResp = await fetch(`/server/json`, {
@@ -58,7 +61,6 @@ registerPlugin('duplicate-original-image', context => {
 
         // 5. Build CreateObjects payload
         const newName = `web_${originalMeta.BasicMetaData.Name}`;
-        const dossierId = image.dossier.id; // assuming this is available
 
         const createPayload = {
           method: 'CreateObjects',
