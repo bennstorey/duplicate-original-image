@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ E28 Plugin: Duplicate Original Image - Full WW Flow");
+  console.log("✅ V 3.2 Plugin: Duplicate Original Image - Full WW Flow");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
