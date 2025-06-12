@@ -1,8 +1,9 @@
 (function () {
-  console.log("✅ V 3.2 Plugin: Duplicate Original Image - Full WW Flow");
+  console.log("✅ 3.3 Plugin: Duplicate Original Image - ListVersions (corrected)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
+    const ticket = info?.Ticket || "";
     const headers = {
       "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest"
@@ -18,32 +19,29 @@
         try {
           const objectId = selection[0].ID;
 
-          const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
+          // Step 1: ListVersions to get version 0.1 (version 1)
+          const versionRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=ListVersions`, {
             method: "POST",
             headers,
-            body: JSON.stringify({ ObjectId: objectId })
+            body: JSON.stringify({
+              Ticket: ticket,
+              ID: objectId,
+              Rendition: "native",
+              Areas: ["Workflow"]
+            })
           });
-          const metaJson = await metaRes.json();
-          const original = metaJson?.Object;
-          console.log("📦 Original metadata:", original);
 
-          // Step: ListVersions to get version 0.1
-          const listVersionsRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=ListVersions`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ ObjectId: objectId })
-          });
-          const versionsJson = await listVersionsRes.json();
-          const version01 = versionsJson?.Versions?.find(v => v.Version === "0.1");
+          const versionJson = await versionRes.json();
+          const version01 = versionJson?.Versions?.find(v => v.Version === "0.1");
           if (!version01?.FileUrl) throw new Error("Version 0.1 not found in ListVersions result");
 
-          // Step: Download original binary from version 0.1
-          const binaryRes = await fetch(version01.FileUrl);
+          const fileUrl = version01.FileUrl;
+          const binaryRes = await fetch(fileUrl);
           const buffer = await binaryRes.arrayBuffer();
-          const blob = new Blob([buffer], { type: original.Format || 'application/octet-stream' });
-          const file = new File([blob], `web_${original.Name}`, { type: blob.type });
+          const blob = new Blob([buffer], { type: 'application/octet-stream' });
+          const file = new File([blob], `web_${selection[0].Name}`, { type: blob.type });
 
-          const uploadResult = await window.entApi.callMethod("UploadFile", [{ Ticket: "" }], file);
+          const uploadResult = await window.entApi.callMethod("UploadFile", [{ Ticket: ticket }], file);
           if (!uploadResult?.UploadToken || !uploadResult?.ContentPath) {
             throw new Error("UploadFile response missing UploadToken or ContentPath");
           }
@@ -54,15 +52,15 @@
               {
                 __classname__: "WWAsset",
                 Type: "Image",
-                Name: `web_${original.Name}`,
-                TargetName: `web_${original.Name}`,
+                Name: `web_${selection[0].Name}`,
+                TargetName: `web_${selection[0].Name}`,
                 Dossier: { ID: dossier.ID },
                 UploadToken: uploadResult.UploadToken,
                 ContentPath: uploadResult.ContentPath,
-                Format: original.Format,
-                Category: original.Category,
-                Publication: original.Publication,
-                AssetInfo: { OriginalFileName: original.Name }
+                Format: "image/jpeg",
+                Category: selection[0].Category,
+                Publication: selection[0].Publication,
+                AssetInfo: { OriginalFileName: selection[0].Name }
               }
             ]
           };
