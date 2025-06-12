@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 3.4 Plugin: Duplicate Original Image - ListVersions with working URL");
+  console.log("✅ 3.5 Plugin: Duplicate Original Image - Require version 0.1");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -40,9 +40,12 @@
 
           const versionJson = await versionRes.json();
           const versions = versionJson?.result?.Versions || [];
+          console.log("📄 Versions returned:", versions);
+
           const version01 = versions.find(v => v.Version === "0.1");
-          const fileUrl = version01?.File?.FileUrl;
-          if (!fileUrl) throw new Error("Version 0.1 FileUrl not found in ListVersions result");
+          if (!version01?.File?.FileUrl) throw new Error("Version 0.1 not found or missing FileUrl");
+
+          const fileUrl = version01.File.FileUrl;
 
           const binaryRes = await fetch(fileUrl);
           const buffer = await binaryRes.arrayBuffer();
