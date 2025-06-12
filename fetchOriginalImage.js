@@ -1,114 +1,107 @@
-//version 3.0
+//version 3.1
 //implementaiton url: https://bennstorey.github.io/duplicate-original-image/fetchOriginalImage.js
+(function () {
+  console.log("✅ version 3.1 Plugin: Duplicate Original Image");
 
-// Duplicate Image Plugin with Upload + CreateObjects
-(function waitForStudioAPI() {
-  if (!window.contentstationExtensionApi || !window.contentstationExtensionApi.registerPlugin) {
-    console.log('[Duplicate Image Plugin] Waiting for Studio SDK...');
-    return setTimeout(waitForStudioAPI, 100);
-  }
+  let sessionInfo = null;
 
-  const { registerPlugin, showToast } = window.contentstationExtensionApi;
+  ContentStationSdk.onSignin((info) => {
+    console.log("🔑 Signin callback received:", info);
+    sessionInfo = {
+      ticket: '',
+      studioServerUrl: info?.Url || `${location.origin}/server`
+    };
 
-  registerPlugin('duplicate-original-image', context => {
-    console.log('[Duplicate Image Plugin] Plugin loaded');
+    console.warn("⚠️ Ticket not present — using cookie-based auth");
+    console.log("📡 Session Info:", sessionInfo);
 
-    context.dossier.registerToolbarButton({
-      icon: 'copy',
-      tooltip: 'Duplicate Original Image (v1)',
-      async onClick(selection) {
-        console.log('[Duplicate Image Plugin] Toolbar button clicked');
+    const serverUrl = sessionInfo.studioServerUrl;
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest"
+    };
 
-        if (!selection?.length || selection[0].type !== 'Image') {
-          showToast('Please select a single image object.');
-          return;
-        }
-
-        const original = selection[0];
-        const ticket = context.session.ticket;
-        const serverUrl = context.session.studioServerUrl;
-
+    ContentStationSdk.addDossierToolbarButton({
+      label: "Duplicate Image(s)",
+      id: "duplicate-image-button",
+      onInit: (button, selection) => {
+        button.isDisabled = !selection || selection.length === 0 || !selection.every(item => item.Type === "Image");
+      },
+      onAction: async (button, selection, dossier) => {
         try {
-          // Step 1: Fetch original binary
-          const fileUrl = original.files[0]?.fileUrl;
-          const binary = await fetch(fileUrl + '&ticket=' + encodeURIComponent(ticket)).then(r => r.blob());
+          const objectId = selection[0].ID;
 
-          // Step 2: Upload via UploadFile
-          const uploadResponse = await window.entApi.callMethod('UploadFile', [{ Ticket: ticket }], binary);
-          const uploadedFileUrl = serverUrl + uploadResponse?.path;
-          console.log('[UploadFile] Uploaded to:', uploadedFileUrl);
+          const metaRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectMetaData`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ ObjectId: objectId })
+          });
+          const metaJson = await metaRes.json();
+          const original = metaJson?.Object;
+          console.log("📦 Original metadata:", original);
 
-          // Step 3: Build CreateObjects payload
-          const newName = 'web_' + original.name;
-          const createPayload = {
-            method: 'CreateObjects',
-            id: '1',
-            params: [
-              {
-                Ticket: ticket,
-                Lock: false,
-                Objects: [
-                  {
-                    __classname__: 'Object',
-                    MetaData: {
-                      BasicMetaData: {
-                        Name: newName,
-                        Type: 'Image',
-                        Publication: original.publication,
-                        Category: original.category,
-                        __classname__: 'BasicMetaData'
-                      },
-                      WorkflowMetaData: {
-                        State: original.state,
-                        __classname__: 'WorkflowMetaData'
-                      },
-                      ContentMetaData: {
-                        Format: 'image/jpeg',
-                        __classname__: 'ContentMetaData'
-                      },
-                      ExtraMetaData: original.extraMetaData,
-                      __classname__: 'MetaData'
-                    },
-                    Files: [
-                      {
-                        Rendition: 'native',
-                        Type: 'image/jpeg',
-                        FileUrl: uploadedFileUrl,
-                        __classname__: 'Attachment'
-                      }
-                    ],
-                    Relations: [
-                      {
-                        Parent: original.dossierId,
-                        Type: 'Contained',
-                        Targets: [],
-                        __classname__: 'Relation'
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            jsonrpc: '2.0'
-          };
+          const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ ObjectId: objectId, Version: 1 })
+          });
+          const buffer = await binaryRes.arrayBuffer();
+          const blob = new Blob([buffer], { type: original.Format || 'application/octet-stream' });
+          const file = new File([blob], `web_${original.Name}`, { type: blob.type });
 
-          const response = await fetch(serverUrl + '/json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(createPayload)
-          }).then(r => r.json());
+          const form = new FormData();
+          form.append("File", file);
 
-          if (response?.result?.Objects?.length) {
-            showToast('Image duplicated successfully.');
-            console.log('[CreateObjects] Success:', response);
-          } else {
-            console.error('[CreateObjects] Failed:', response);
-            showToast('Failed to create duplicate image.');
+          const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
+            method: "POST",
+            headers: {},
+            body: form
+          });
+
+          const rawUploadText = await uploadRes.text();
+          if (!rawUploadText || rawUploadText.trim().length === 0) {
+            throw new Error("UploadFile returned empty body");
           }
 
-        } catch (error) {
-          console.error('[Duplicate Image Plugin] Error:', error);
-          showToast('An error occurred during duplication.');
+          const uploadJson = JSON.parse(rawUploadText);
+          const { UploadToken, ContentPath } = uploadJson;
+
+          const payload = {
+            Objects: [
+              {
+                __classname__: "WWAsset",
+                Type: "Image",
+                Name: `web_${original.Name}`,
+                TargetName: `web_${original.Name}`,
+                Dossier: { ID: dossier.ID },
+                UploadToken,
+                ContentPath,
+                Format: original.Format,
+                Category: original.Category,
+                Publication: original.Publication,
+                AssetInfo: { OriginalFileName: original.Name }
+              }
+            ]
+          };
+
+          const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload)
+          });
+
+          const rawCreateText = await createRes.text();
+          if (!rawCreateText || rawCreateText.trim().length === 0) {
+            throw new Error(`CreateObjects returned empty body. HTTP ${createRes.status} ${createRes.statusText}`);
+          }
+
+          const createResult = JSON.parse(rawCreateText);
+          console.log("✅ Created object:", createResult);
+          ContentStationSdk.showNotification({ content: "✅ Image duplicated successfully." });
+
+        } catch (err) {
+          console.error("❌ Error during duplication flow:", err);
+          ContentStationSdk.showNotification({ content: "❌ Image duplication failed. Check console." });
         }
       }
     });
