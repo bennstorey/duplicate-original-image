@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 3.7 Plugin: Duplicate Original Image - LogOn version");
+  console.log("✅ 3.8 Plugin: Duplicate Original Image - Fixed LogOn format");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -18,17 +18,24 @@
         body: JSON.stringify({
           method: "LogOn",
           id: "1",
-          params: [
-            {
-              UserName: username,
-              Password: password
+          Params: {
+            req: {
+              User: username,
+              Password: password,
+              ClientName: "plugin",
+              ClientAppName: "duplicate_original_image",
+              ClientAppVersion: "1.0",
+              ClientAppSerial: "",
+              RequestInfo: [""],
+              __classname__: "WflLogOnRequest"
             }
-          ],
+          },
           jsonrpc: "2.0"
         })
       });
 
       const json = await res.json();
+      console.log("🔐 LogOn response:", json);
       if (!json?.result?.Ticket) throw new Error("LogOn failed: no ticket returned");
       return json.result.Ticket;
     };
