@@ -1,21 +1,8 @@
-//version 3.1
-//implementaiton url: https://bennstorey.github.io/duplicate-original-image/fetchOriginalImage.js
 (function () {
-  console.log("✅ version 3.1 Plugin: Duplicate Original Image");
-
-  let sessionInfo = null;
+  console.log("✅ E28 Plugin: Duplicate Original Image - Full WW Flow");
 
   ContentStationSdk.onSignin((info) => {
-    console.log("🔑 Signin callback received:", info);
-    sessionInfo = {
-      ticket: '',
-      studioServerUrl: info?.Url || `${location.origin}/server`
-    };
-
-    console.warn("⚠️ Ticket not present — using cookie-based auth");
-    console.log("📡 Session Info:", sessionInfo);
-
-    const serverUrl = sessionInfo.studioServerUrl;
+    const serverUrl = info?.Url || `${location.origin}/server`;
     const headers = {
       "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest"
@@ -40,31 +27,27 @@
           const original = metaJson?.Object;
           console.log("📦 Original metadata:", original);
 
-          const binaryRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=GetObjectBinary`, {
+          // Step: ListVersions to get version 0.1
+          const listVersionsRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=ListVersions`, {
             method: "POST",
             headers,
-            body: JSON.stringify({ ObjectId: objectId, Version: 1 })
+            body: JSON.stringify({ ObjectId: objectId })
           });
+          const versionsJson = await listVersionsRes.json();
+          const version01 = versionsJson?.Versions?.find(v => v.Version === "0.1");
+          if (!version01?.FileUrl) throw new Error("Version 0.1 not found in ListVersions result");
+
+          // Step: Download original binary from version 0.1
+          const binaryRes = await fetch(version01.FileUrl);
           const buffer = await binaryRes.arrayBuffer();
           const blob = new Blob([buffer], { type: original.Format || 'application/octet-stream' });
           const file = new File([blob], `web_${original.Name}`, { type: blob.type });
 
-          const form = new FormData();
-          form.append("File", file);
-
-          const uploadRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
-            method: "POST",
-            headers: {},
-            body: form
-          });
-
-          const rawUploadText = await uploadRes.text();
-          if (!rawUploadText || rawUploadText.trim().length === 0) {
-            throw new Error("UploadFile returned empty body");
+          const uploadResult = await window.entApi.callMethod("UploadFile", [{ Ticket: "" }], file);
+          if (!uploadResult?.UploadToken || !uploadResult?.ContentPath) {
+            throw new Error("UploadFile response missing UploadToken or ContentPath");
           }
-
-          const uploadJson = JSON.parse(rawUploadText);
-          const { UploadToken, ContentPath } = uploadJson;
+          console.log("📤 UploadFile result:", uploadResult);
 
           const payload = {
             Objects: [
@@ -74,8 +57,8 @@
                 Name: `web_${original.Name}`,
                 TargetName: `web_${original.Name}`,
                 Dossier: { ID: dossier.ID },
-                UploadToken,
-                ContentPath,
+                UploadToken: uploadResult.UploadToken,
+                ContentPath: uploadResult.ContentPath,
                 Format: original.Format,
                 Category: original.Category,
                 Publication: original.Publication,
