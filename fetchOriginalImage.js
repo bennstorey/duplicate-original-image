@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 3.5 Plugin: Duplicate Original Image - Require version 0.1");
+  console.log("✅ 3.6 Plugin: Duplicate Original Image - Require version 0.1");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -30,8 +30,7 @@
                 {
                   Ticket: ticket,
                   ID: objectId,
-                  Rendition: "native",
-                  Areas: ["Workflow"]
+                  Rendition: "native"
                 }
               ],
               jsonrpc: "2.0"
@@ -39,9 +38,8 @@
           });
 
           const versionJson = await versionRes.json();
+          console.log("📄 Raw ListVersions response:", versionJson);
           const versions = versionJson?.result?.Versions || [];
-          console.log("📄 Versions returned:", versions);
-
           const version01 = versions.find(v => v.Version === "0.1");
           if (!version01?.File?.FileUrl) throw new Error("Version 0.1 not found or missing FileUrl");
 
