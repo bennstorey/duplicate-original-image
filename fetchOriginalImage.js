@@ -1,12 +1,36 @@
 (function () {
-  console.log("✅ 3.6 Plugin: Duplicate Original Image - Require version 0.1");
+  console.log("✅ 3.7 Plugin: Duplicate Original Image - LogOn version");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
-    const ticket = info?.Ticket || "";
     const headers = {
       "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest"
+    };
+
+    const logOn = async () => {
+      const username = prompt("Studio API username");
+      const password = prompt("Studio API password");
+
+      const res = await fetch(`${serverUrl}/index.php?protocol=JSON`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          method: "LogOn",
+          id: "1",
+          params: [
+            {
+              UserName: username,
+              Password: password
+            }
+          ],
+          jsonrpc: "2.0"
+        })
+      });
+
+      const json = await res.json();
+      if (!json?.result?.Ticket) throw new Error("LogOn failed: no ticket returned");
+      return json.result.Ticket;
     };
 
     ContentStationSdk.addDossierToolbarButton({
@@ -17,6 +41,7 @@
       },
       onAction: async (button, selection, dossier) => {
         try {
+          const ticket = await logOn();
           const objectId = selection[0].ID;
 
           // Step 1: ListVersions to get version 0.1 (version 1)
