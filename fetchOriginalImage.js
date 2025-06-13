@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 3.8 Plugin: Duplicate Original Image - Fixed LogOn format");
+  console.log("✅ 3.9 Plugin: Duplicate Original Image - Fixed UploadFile via fetch");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -82,7 +82,16 @@
           const blob = new Blob([buffer], { type: 'application/octet-stream' });
           const file = new File([blob], `web_${selection[0].Name}`, { type: blob.type });
 
-          const uploadResult = await window.entApi.callMethod("UploadFile", [{ Ticket: ticket }], file);
+          const uploadForm = new FormData();
+          uploadForm.append("Ticket", ticket);
+          uploadForm.append("file", file);
+
+          const uploadResponse = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
+            method: "POST",
+            body: uploadForm
+          });
+          const uploadResult = await uploadResponse.json();
+
           if (!uploadResult?.UploadToken || !uploadResult?.ContentPath) {
             throw new Error("UploadFile response missing UploadToken or ContentPath");
           }
