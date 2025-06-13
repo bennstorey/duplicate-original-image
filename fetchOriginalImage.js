@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 4.6 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
+  console.log("✅ 4.7 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
