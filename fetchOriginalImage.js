@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 4.2 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
+  console.log("✅ 4.3 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -118,6 +118,7 @@
 
           if (!putRes.ok) throw new Error(`PUT failed: HTTP ${putRes.status}`);
 
+          const name = `web_${meta.BasicMetaData.Name}`;
           const payload = {
             method: "CreateObjects",
             id: "1",
@@ -128,14 +129,24 @@
                   {
                     __classname__: "WWAsset",
                     Type: "Image",
-                    Name: `web_${meta.BasicMetaData.Name}`,
-                    TargetName: `web_${meta.BasicMetaData.Name}`,
+                    Name: name,
+                    TargetName: name,
                     Dossier: { ID: dossier.ID },
                     ContentPath: fileGuid,
                     Format: meta.ContentMetaData.Format,
                     Category: meta.BasicMetaData.Category,
                     Publication: meta.BasicMetaData.Publication,
-                    MetaData: meta
+                    MetaData: {
+                      __classname__: "MetaData",
+                      BasicMetaData: {
+                        __classname__: "BasicMetaData",
+                        Name: name,
+                        Type: "Image",
+                        Format: meta.ContentMetaData.Format,
+                        Publication: meta.BasicMetaData.Publication,
+                        Category: meta.BasicMetaData.Category
+                      }
+                    }
                   }
                 ]
               }
