@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 4.0 Plugin: Duplicate Original Image - Using transferindex.php for upload");
+  console.log("✅ 4.1 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -51,7 +51,35 @@
           const ticket = await logOn();
           const objectId = selection[0].ID;
 
-          // Step 1: ListVersions to get version 0.1 (version 1)
+          // GetObject to fetch full metadata (strictly following WW guidance)
+          const getObjectRes = await fetch(`${serverUrl}/index.php?protocol=JSON`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              method: "GetObjects",
+              id: "1",
+              params: [
+                {
+                  Ticket: ticket,
+                  IDs: [objectId],
+                  Lock: false,
+                  Rendition: "native",
+                  RequestInfo: ["Pages", "Targets", "Files", "Relations"],
+                  HaveVersions: [],
+                  Areas: null,
+                  EditionId: "",
+                  SupportedContentSources: [],
+                  __classname__: "WflGetObjectsRequest"
+                }
+              ],
+              jsonrpc: "2.0"
+            })
+          });
+
+          const getObjectJson = await getObjectRes.json();
+          const meta = getObjectJson?.result?.Objects?.[0]?.MetaData;
+          if (!meta) throw new Error("Missing metadata from GetObjects");
+
           const versionRes = await fetch(`${serverUrl}/index.php?protocol=JSON`, {
             method: "POST",
             headers,
@@ -70,10 +98,8 @@
           });
 
           const versionJson = await versionRes.json();
-          console.log("📄 Raw ListVersions response:", versionJson);
-          const versions = versionJson?.result?.Versions || [];
-          const version01 = versions.find(v => v.Version === "0.1");
-          if (!version01?.File?.FileUrl) throw new Error("Version 0.1 not found or missing FileUrl");
+          const version01 = versionJson?.result?.Versions?.find(v => v.Version === "0.1");
+          if (!version01?.File?.FileUrl) throw new Error("Version 0.1 FileUrl not found");
 
           const fileUrl = version01.File.FileUrl;
           const binaryRes = await fetch(fileUrl);
@@ -92,21 +118,20 @@
           });
 
           if (!putRes.ok) throw new Error(`PUT failed: HTTP ${putRes.status}`);
-          console.log("📤 PUT upload succeeded:", fileGuid);
 
           const payload = {
             Objects: [
               {
                 __classname__: "WWAsset",
                 Type: "Image",
-                Name: `web_${selection[0].Name}`,
-                TargetName: `web_${selection[0].Name}`,
+                Name: `web_${meta.BasicMetaData.Name}`,
+                TargetName: `web_${meta.BasicMetaData.Name}`,
                 Dossier: { ID: dossier.ID },
                 ContentPath: fileGuid,
-                Format: "image/jpeg",
-                Category: selection[0].Category,
-                Publication: selection[0].Publication,
-                AssetInfo: { OriginalFileName: selection[0].Name }
+                Format: meta.ContentMetaData.Format,
+                Category: meta.BasicMetaData.Category,
+                Publication: meta.BasicMetaData.Publication,
+                MetaData: meta
               }
             ]
           };
