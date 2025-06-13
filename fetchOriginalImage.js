@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 3.9 Plugin: Duplicate Original Image - Fixed UploadFile via fetch");
+  console.log("✅ 4.0 Plugin: Duplicate Original Image - Using transferindex.php for upload");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -76,26 +76,23 @@
           if (!version01?.File?.FileUrl) throw new Error("Version 0.1 not found or missing FileUrl");
 
           const fileUrl = version01.File.FileUrl;
-
           const binaryRes = await fetch(fileUrl);
           const buffer = await binaryRes.arrayBuffer();
           const blob = new Blob([buffer], { type: 'application/octet-stream' });
-          const file = new File([blob], `web_${selection[0].Name}`, { type: blob.type });
 
-          const uploadForm = new FormData();
-          uploadForm.append("Ticket", ticket);
-          uploadForm.append("file", file);
+          const fileGuid = crypto.randomUUID();
+          const uploadUrl = `${serverUrl}/transferindex.php?fileguid=${fileGuid}&ticket=${ticket}`;
 
-          const uploadResponse = await fetch(`${serverUrl}/index.php?protocol=JSON&method=UploadFile`, {
-            method: "POST",
-            body: uploadForm
+          const putRes = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+              "x-ww-transfermode": "raw"
+            },
+            body: blob
           });
-          const uploadResult = await uploadResponse.json();
 
-          if (!uploadResult?.UploadToken || !uploadResult?.ContentPath) {
-            throw new Error("UploadFile response missing UploadToken or ContentPath");
-          }
-          console.log("📤 UploadFile result:", uploadResult);
+          if (!putRes.ok) throw new Error(`PUT failed: HTTP ${putRes.status}`);
+          console.log("📤 PUT upload succeeded:", fileGuid);
 
           const payload = {
             Objects: [
@@ -105,8 +102,7 @@
                 Name: `web_${selection[0].Name}`,
                 TargetName: `web_${selection[0].Name}`,
                 Dossier: { ID: dossier.ID },
-                UploadToken: uploadResult.UploadToken,
-                ContentPath: uploadResult.ContentPath,
+                ContentPath: fileGuid,
                 Format: "image/jpeg",
                 Category: selection[0].Category,
                 Publication: selection[0].Publication,
