@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 4.4 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
+  console.log("✅ 4.5 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -138,6 +138,7 @@
             params: [
               {
                 Ticket: ticket,
+                RequestInfo: [""],
                 Objects: [
                   {
                     __classname__: "WWAsset",
