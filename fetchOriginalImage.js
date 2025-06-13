@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 4.1 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
+  console.log("✅ 4.2 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -51,7 +51,6 @@
           const ticket = await logOn();
           const objectId = selection[0].ID;
 
-          // GetObject to fetch full metadata (strictly following WW guidance)
           const getObjectRes = await fetch(`${serverUrl}/index.php?protocol=JSON`, {
             method: "POST",
             headers,
@@ -120,23 +119,31 @@
           if (!putRes.ok) throw new Error(`PUT failed: HTTP ${putRes.status}`);
 
           const payload = {
-            Objects: [
+            method: "CreateObjects",
+            id: "1",
+            params: [
               {
-                __classname__: "WWAsset",
-                Type: "Image",
-                Name: `web_${meta.BasicMetaData.Name}`,
-                TargetName: `web_${meta.BasicMetaData.Name}`,
-                Dossier: { ID: dossier.ID },
-                ContentPath: fileGuid,
-                Format: meta.ContentMetaData.Format,
-                Category: meta.BasicMetaData.Category,
-                Publication: meta.BasicMetaData.Publication,
-                MetaData: meta
+                Ticket: ticket,
+                Objects: [
+                  {
+                    __classname__: "WWAsset",
+                    Type: "Image",
+                    Name: `web_${meta.BasicMetaData.Name}`,
+                    TargetName: `web_${meta.BasicMetaData.Name}`,
+                    Dossier: { ID: dossier.ID },
+                    ContentPath: fileGuid,
+                    Format: meta.ContentMetaData.Format,
+                    Category: meta.BasicMetaData.Category,
+                    Publication: meta.BasicMetaData.Publication,
+                    MetaData: meta
+                  }
+                ]
               }
-            ]
+            ],
+            jsonrpc: "2.0"
           };
 
-          const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON&method=CreateObjects`, {
+          const createRes = await fetch(`${serverUrl}/index.php?protocol=JSON`, {
             method: "POST",
             headers,
             body: JSON.stringify(payload)
