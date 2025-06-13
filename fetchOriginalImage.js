@@ -1,5 +1,5 @@
 (function () {
-  console.log("✅ 4.3 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
+  console.log("✅ 4.4 Plugin: Duplicate Original Image - Using transferindex.php for upload (strict WW steps)");
 
   ContentStationSdk.onSignin((info) => {
     const serverUrl = info?.Url || `${location.origin}/server`;
@@ -119,6 +119,19 @@
           if (!putRes.ok) throw new Error(`PUT failed: HTTP ${putRes.status}`);
 
           const name = `web_${meta.BasicMetaData.Name}`;
+
+          const publication = {
+            Id: meta.BasicMetaData.Publication?.Id,
+            Name: meta.BasicMetaData.Publication?.Name,
+            __classname__: "Publication"
+          };
+
+          const category = {
+            Id: meta.BasicMetaData.Category?.Id,
+            Name: meta.BasicMetaData.Category?.Name,
+            __classname__: "Category"
+          };
+
           const payload = {
             method: "CreateObjects",
             id: "1",
@@ -134,8 +147,8 @@
                     Dossier: { ID: dossier.ID },
                     ContentPath: fileGuid,
                     Format: meta.ContentMetaData.Format,
-                    Category: meta.BasicMetaData.Category,
-                    Publication: meta.BasicMetaData.Publication,
+                    Category: category,
+                    Publication: publication,
                     MetaData: {
                       __classname__: "MetaData",
                       BasicMetaData: {
@@ -143,8 +156,8 @@
                         Name: name,
                         Type: "Image",
                         Format: meta.ContentMetaData.Format,
-                        Publication: meta.BasicMetaData.Publication,
-                        Category: meta.BasicMetaData.Category
+                        Publication: publication,
+                        Category: category
                       }
                     }
                   }
